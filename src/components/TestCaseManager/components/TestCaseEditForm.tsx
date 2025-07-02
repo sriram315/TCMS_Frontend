@@ -1,13 +1,15 @@
-import React, { useState, useEffect } from "react";
+import  { useState, useEffect } from "react";
 import { Formik, Form, Field, ErrorMessage, FormikHelpers } from "formik";
 import * as Yup from "yup";
 import { toast, ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import axios from "axios";
 import { useLocation, useNavigate } from "react-router-dom";
+import { API_URL } from "../../../config";
 
 // Define the TestCase interface (consistent with TestCaseGrid.tsx)
 interface TestCase {
+  id: any;
   _id?: string;
   // testCaseId: string;
   title: string;
@@ -23,11 +25,6 @@ interface TestCase {
   projectId: string;
 }
 
-// Define component props
-interface TestCaseEditFormProps {
-  onSave: (data: TestCase) => Promise<void>;
-  selected: TestCase | null;
-}
 
 // Define initial state
 const initialState: TestCase = {
@@ -43,6 +40,7 @@ const initialState: TestCase = {
   module: "",
   userStory: "",
   projectId: "",
+  id: undefined
 };
 
 // Define validation schema
@@ -69,15 +67,18 @@ const validationSchema = Yup.object({
   projectId: Yup.string().required("Project is required"),
 });
 
-export default function TestCaseEditForm({
-  onSave,
-  selected,
-}: TestCaseEditFormProps) {
+export default function TestCaseEditForm() {
   const [initialValues, setInitialValues] = useState<TestCase>(initialState);
   const userEmail: string =
     JSON.parse(sessionStorage.getItem("user") || "{}")?.email || "";
 
-  const [projects, setProjects] = useState([]);
+  interface Project {
+    _id: string;
+    name: string;
+    assignedTo?: string[];
+    // add other fields as needed
+  }
+  const [projects, setProjects] = useState<Project[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const location = useLocation();
   const { state } = location;
@@ -88,7 +89,7 @@ export default function TestCaseEditForm({
   useEffect(() => {
     // Fetch projects from the API
     axios
-      .get("http://localhost:5000/api/projects")
+      .get(`${API_URL}/projects`)
       .then((response) => {
         setProjects(response.data);
       })
@@ -100,7 +101,7 @@ export default function TestCaseEditForm({
   useEffect(() => {
     const fetchMail = async () => {
       try {
-        const response = await axios.get("http://localhost:5000/api/users");
+        await axios.get(`${API_URL}/users`);
       } catch (error) {
         console.log(error);
       }
@@ -110,16 +111,16 @@ export default function TestCaseEditForm({
   const navigate = useNavigate();
   const token = sessionStorage.getItem("token") || ""; // Replace with your actual token retrieval method
 
-  const user = JSON.parse(sessionStorage.getItem("user"));
+  const user =  JSON.parse(sessionStorage.getItem("user") || "{}");
 
   const handleSubmit = async (
     values: TestCase,
-    { resetForm, setSubmitting }: FormikHelpers<TestCase>
+    { resetForm }: FormikHelpers<TestCase>
   ) => {
     try {
       setIsLoading(true);
-      const response = await axios.put(
-        `http://localhost:5000/api/testcases/${initialValues.id}`,
+       await axios.put(
+        `${API_URL}/testcases/${initialValues.id}`,
         {
           ...values,
           updatedBy: user.name,

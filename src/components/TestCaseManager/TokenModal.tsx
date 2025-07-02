@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { X, Copy } from "lucide-react";
 import axios from "axios";
+import { API_URL } from "../../config";
 
 interface TokenModalProps {
   open: boolean;
@@ -32,7 +33,7 @@ const TokenModal: React.FC<TokenModalProps> = ({ open, onClose }) => {
     setError(null);
     setToken(null);
     try {
-      const res = await axios.get(`http://localhost:5000/api/token/${userId}`, {
+      const res = await axios.get(`${API_URL}/token/${userId}`, {
         headers: {
           Authorization: `Bearer ${authToken}`,
         },
@@ -60,7 +61,7 @@ const TokenModal: React.FC<TokenModalProps> = ({ open, onClose }) => {
     setError(null);
     try {
       await axios.post(
-        "http://localhost:5000/api/token/generate-secondary-token",
+        `${API_URL}/token/generate-secondary-token`,
         { userId },
         {
           headers: {

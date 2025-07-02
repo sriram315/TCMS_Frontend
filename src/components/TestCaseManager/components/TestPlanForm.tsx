@@ -6,6 +6,7 @@ import "react-toastify/dist/ReactToastify.css";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../../../context/AuthContext";
+import { API_URL } from "../../../config";
 
 // Define the TestCase interface (consistent with TestCaseGrid.tsx)
 interface TestCase {
@@ -60,7 +61,7 @@ export default function TestPlanForm({ onSave, selected }: TestPlanFormProps) {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const response = await axios.get("http://localhost:5000/api/testcases");
+        const response = await axios.get(`${API_URL}/testcases`);
         const data = response.data;
         const updatedData = data.map((prevData) => ({
           ...prevData,
@@ -78,10 +79,9 @@ export default function TestPlanForm({ onSave, selected }: TestPlanFormProps) {
   useEffect(() => {
     // Fetch testCases from the API
     axios
-      .get("http://localhost:5000/api/testcases")
+      .get(`${API_URL}/testcases`)
       .then((response) => {
         settestCases(response.data);
-        console.log(response.data);
 
         const modulesFilter = response.data.map((testcase) => testcase.module);
         const uniqueModule = Array.from(new Set(modulesFilter));
@@ -96,7 +96,7 @@ export default function TestPlanForm({ onSave, selected }: TestPlanFormProps) {
 
   useEffect(() => {
     axios
-      .get("http://localhost:5000/api/users")
+      .get(`${API_URL}/users`)
       .then((response) => {
         const data = response.data.data.users;
         const filteredUsers =
@@ -114,18 +114,13 @@ export default function TestPlanForm({ onSave, selected }: TestPlanFormProps) {
         // Create filtered user test cases by comparing createdBy with user email
         if (allTestCases.length > 0 && filteredUsers.length > 0) {
           const userEmails = filteredUsers.map((user: any) => user.email);
-          console.log(userEmails);
 
           const filtered = allTestCases.filter((testCase) =>
             userEmails.includes(testCase.createdBy)
           );
-          console.log("check", filtered);
           const filteredModules = filtered.map((testCase) => testCase.module);
-          console.log("check", filteredModules);
           setModules([...new Set(filteredModules)]);
           setFilteredUserTestCases(filtered);
-          console.log("Filtered user test cases:", filtered);
-          console.log("TestCases", testCases);
         }
       })
       .catch((error) => {
@@ -225,7 +220,7 @@ export default function TestPlanForm({ onSave, selected }: TestPlanFormProps) {
     try {
       setIsLoading(true);
       const response = await axios.post(
-        "http://localhost:5000/api/test-plan",
+        `${API_URL}/test-plan`,
         payload,
         {
           headers: {
@@ -336,14 +331,14 @@ export default function TestPlanForm({ onSave, selected }: TestPlanFormProps) {
                     name: "dueDateFrom",
                     type: "date",
                     min: new Date().toISOString().split("T")[0],
-                    calendarOnly: true, // <-- add this flag
+                    calendarOnly: true, 
                   },
                   {
                     label: "Due Date To",
                     name: "dueDateTo",
                     type: "date",
                     min: new Date().toISOString().split("T")[0],
-                    calendarOnly: true, // <-- add this flag
+                    calendarOnly: true, 
                   },
                 ].map((field) => (
                   <div key={field.name} className="flex flex-col">

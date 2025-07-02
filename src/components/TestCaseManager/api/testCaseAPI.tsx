@@ -1,4 +1,5 @@
 import axios, { AxiosResponse } from "axios";
+import { API_URL } from "../../../config";
 
 // Define the TestCase interface (consistent with App.tsx)
 interface TestCase {
@@ -9,7 +10,7 @@ interface TestCase {
 const token = sessionStorage.getItem("token") || ""; // Replace with your actual token retrieval method
 // Create Axios instance
 const API = axios.create({
-  baseURL: "http://localhost:5000/api",
+  baseURL: API_URL,
   headers: {
     Authorization: `Bearer ${token}`, // replace `token` with your actual token variable
   }, // your backend port

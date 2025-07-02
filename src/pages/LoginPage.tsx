@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useCallback,  useState } from "react";
 import { useAuth } from "../context/AuthContext";
 import { AtSign, KeyRound, Loader2, EyeOff, Eye } from "lucide-react";
 import { useNavigate } from "react-router-dom";
@@ -11,32 +11,27 @@ const LoginPage: React.FC = () => {
   const [error, setError] = useState("");
   const navigate = useNavigate();
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setError("");
+  const handleSubmit = useCallback(
+    async (e: React.FormEvent) => {
+      e.preventDefault();
+      setError("");
 
-    try {
-      const response = await login(email, password);
-      if (response) {
+      try {
+        await login(email, password);
         navigate("/dashboard");
+      } catch (err) {
+        alert(err.response.data.message || "Invalid credentials. Please try again.");
+        setError("Invalid email or password");
       }
-    } catch (err) {
-      alert(
-        err.response.data.message || "Invalid credentials. Please try again."
-      );
-      setError("Invalid email or password");
-    }
-  };
+    },
+    [email, password]
+  );
 
   return (
     <div className="min-h-screen bg-gray-50 flex flex-col justify-center py-12 sm:px-6 lg:px-8">
       <div className="sm:mx-auto sm:w-full sm:max-w-md">
-        <h1 className="text-center text-3xl font-bold text-primary-600">
-          TestServ TCMS
-        </h1>
-        <h2 className="mt-6 text-center text-2xl font-semibold text-gray-900">
-          Sign in to your account
-        </h2>
+        <h1 className="text-center text-3xl font-bold text-primary-600">TestServ TCMS</h1>
+        <h2 className="mt-6 text-center text-2xl font-semibold text-gray-900">Sign in to your account</h2>
       </div>
 
       <div className="mt-8 sm:mx-auto sm:w-full sm:max-w-md">
@@ -105,26 +100,6 @@ const LoginPage: React.FC = () => {
               </div>
             </div>
 
-            {/* <div className="flex items-center justify-between">
-              <div className="flex items-center">
-                <input
-                  id="remember-me"
-                  name="remember-me"
-                  type="checkbox"
-                  className="h-4 w-4 text-primary-600 focus:ring-primary-500 border-gray-300 rounded"
-                />
-                <label htmlFor="remember-me" className="ml-2 block text-sm text-gray-900">
-                  Remember me
-                </label>
-              </div>
-
-              <div className="text-sm">
-                <a href="#" className="font-medium text-primary-600 hover:text-primary-500">
-                  Forgot your password?
-                </a>
-              </div>
-            </div> */}
-
             <div>
               <button
                 type="submit"
@@ -142,23 +117,6 @@ const LoginPage: React.FC = () => {
               </button>
             </div>
           </form>
-
-          {/* <div className="mt-6">
-            <div className="relative">
-              <div className="absolute inset-0 flex items-center">
-                <div className="w-full border-t border-gray-300" />
-              </div>
-              <div className="relative flex justify-center text-sm">
-                <span className="px-2 bg-white text-gray-500">For demo purposes</span>
-              </div>
-            </div>
-
-            <div className="mt-6 text-center text-sm">
-              <p className="text-gray-600">
-                Use any email/password combination to sign in
-              </p>
-            </div>
-          </div> */}
         </div>
       </div>
     </div>

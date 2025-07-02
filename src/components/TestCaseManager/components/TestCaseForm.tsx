@@ -6,6 +6,7 @@ import "react-toastify/dist/ReactToastify.css";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../../../context/AuthContext";
+import { API_URL } from "../../../config";
 // Define the TestCase interface (consistent with TestCaseGrid.tsx)
 interface TestCase {
   _id?: string;
@@ -47,9 +48,7 @@ const initialState: TestCase = {
 
 // Define validation schema
 const validationSchema = Yup.object({
-  // testCaseId: Yup.string()
-  //   .required("Test Case ID is required")
-  //   .min(3, "Test Case ID must be at least 3 characters"),
+
   title: Yup.string().required("Title is required"),
   module: Yup.string().required("Module is required"),
   preRequisite: Yup.string().required("Pre-Requisite is required"),
@@ -69,25 +68,31 @@ const validationSchema = Yup.object({
   projectId: Yup.string().required("Project is required"),
 });
 
-export default function TestCaseForm({ onSave, selected }: TestCaseFormProps) {
+export default function TestCaseForm({ selected }: TestCaseFormProps) {
   const [initialValues, setInitialValues] = useState<TestCase>(initialState);
   const userId: string =
     JSON.parse(sessionStorage.getItem("user") || "{}")?._id || "";
 
-  const [projects, setProjects] = useState([]);
+  interface Project {
+    _id: string;
+    name: string;
+    assignedTo: { _id: string }[];
+    // Add other fields if needed
+  }
+  const [projects, setProjects] = useState<Project[]>([]);
   const navigate = useNavigate();
   const [userToken, setUserToken] = useState("");
 
   useEffect(() => {
-    const token = sessionStorage.getItem("token");
+    const token = sessionStorage.getItem("token") || "";
     setUserToken(token);
   });
 
   // Function to create a test case
   const createTestCase = async (data: any) => {
     try {
-      const response = await axios.post(
-        "http://localhost:5000/api/testcases",
+     await axios.post(
+        `${API_URL}/testcases`,
         data,
         {
           headers: {
@@ -116,7 +121,7 @@ export default function TestCaseForm({ onSave, selected }: TestCaseFormProps) {
   useEffect(() => {
     // Fetch projects from the API
     axios
-      .get("http://localhost:5000/api/projects")
+      .get(`${API_URL}/projects`)
       .then((response) => {
         setProjects(response.data);
       })
@@ -136,7 +141,7 @@ export default function TestCaseForm({ onSave, selected }: TestCaseFormProps) {
   useEffect(() => {
     const fetchMail = async () => {
       try {
-        const response = await axios.get("http://localhost:5000/api/users");
+        const response = await axios.get(`${API_URL}/users`);
         console.log(response);
       } catch (error) {
         console.log(error);
@@ -144,28 +149,12 @@ export default function TestCaseForm({ onSave, selected }: TestCaseFormProps) {
     };
     fetchMail();
   }, []);
-  const user = JSON.parse(sessionStorage.getItem("user"));
+  const user = JSON.parse(sessionStorage.getItem("user") || "{}");
 
   const handleSubmit = async (
     values: TestCase,
     { resetForm, setSubmitting }: FormikHelpers<TestCase>
   ) => {
-    // try {
-    //   await onSave({ ...values, createdBy: user.email });
-    //   toast.success("Test case saved successfully!", {
-    //     position: "top-right",
-    //     autoClose: 3000,
-    //     hideProgressBar: false,
-    //     closeOnClick: true,
-    //     pauseOnHover: true,
-    //     draggable: true,
-    //     progress: undefined,
-    //   });
-    //   resetForm();
-    //   setTimeout(() => {
-    //     navigate("/test-cases");
-    //   }, 1000);
-    // }
     try {
       createTestCase({ ...values, createdBy: user.email });
       resetForm();
@@ -220,7 +209,6 @@ export default function TestCaseForm({ onSave, selected }: TestCaseFormProps) {
                   type: "textarea",
                 },
                 { label: "Description", name: "description", type: "textarea" },
-                // { label: "Type", name: "type", length: 30 },
                 { label: "Test Steps", name: "steps", type: "textarea" },
                 {
                   label: "Expected Result",
@@ -371,15 +359,6 @@ export default function TestCaseForm({ onSave, selected }: TestCaseFormProps) {
                     }`}
                   >
                     <option value="">Select</option>
-                    {/* {projects
-                      .filter((project) =>
-                        project?.assignedTo?.includes(userId)
-                      )
-                      .map((filteredProject, index) => (
-                        <option key={index} value={filteredProject._id}>
-                          {filteredProject.name}
-                        </option>
-                      ))} */}
                     {projects
                       .filter(
                         (project) =>

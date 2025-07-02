@@ -21,12 +21,7 @@ interface AddUserModalProps {
   onSubmit: (values: any) => void;
 }
 
-const AddUserModal: React.FC<AddUserModalProps> = ({
-  isOpen,
-  onClose,
-  onSubmit,
-}) => {
-  const role = JSON.stringify(sessionStorage.getItem("user"))?.role || "";
+const AddUserModal: React.FC<AddUserModalProps> = ({ isOpen, onClose, onSubmit }) => {
   if (!isOpen) return null;
   const { user } = useAuth();
   // if (!user || user.role !== "Admin") return null; // Only allow admins to add use
@@ -37,21 +32,14 @@ const AddUserModal: React.FC<AddUserModalProps> = ({
           <div className="absolute inset-0 bg-gray-500 opacity-75"></div>
         </div>
 
-        <span
-          className="hidden sm:inline-block sm:align-middle sm:h-screen"
-          aria-hidden="true"
-        >
+        <span className="hidden sm:inline-block sm:align-middle sm:h-screen" aria-hidden="true">
           &#8203;
         </span>
 
         <div className="inline-block align-bottom bg-white rounded-lg text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-lg sm:w-full">
           <div className="flex justify-between items-center px-6 py-4 border-b">
             <h3 className="text-lg font-semibold text-gray-900">Add User</h3>
-            <button
-              type="button"
-              className="text-gray-400 hover:text-gray-500"
-              onClick={onClose}
-            >
+            <button type="button" className="text-gray-400 hover:text-gray-500" onClick={onClose}>
               <X className="h-5 w-5" />
             </button>
           </div>
@@ -80,34 +68,16 @@ const AddUserModal: React.FC<AddUserModalProps> = ({
                     <label htmlFor="name" className="label">
                       Name
                     </label>
-                    <Field
-                      type="text"
-                      id="name"
-                      name="name"
-                      className="input"
-                    />
-                    <ErrorMessage
-                      name="name"
-                      component="div"
-                      className="text-red-500 text-xs mt-1"
-                    />
+                    <Field type="text" id="name" name="name" className="input" />
+                    <ErrorMessage name="name" component="div" className="text-red-500 text-xs mt-1" />
                   </div>
 
                   <div>
                     <label htmlFor="email" className="label">
                       Email Address
                     </label>
-                    <Field
-                      type="email"
-                      id="email"
-                      name="email"
-                      className="input"
-                    />
-                    <ErrorMessage
-                      name="email"
-                      component="div"
-                      className="text-red-500 text-xs mt-1"
-                    />
+                    <Field type="email" id="email" name="email" className="input" />
+                    <ErrorMessage name="email" component="div" className="text-red-500 text-xs mt-1" />
                   </div>
 
                   <div>
@@ -117,77 +87,28 @@ const AddUserModal: React.FC<AddUserModalProps> = ({
                     <Field as="select" id="role" name="role" className="input">
                       <option value="">Select Role</option>
 
-                      {user?.role.toLowerCase() === "superadmin" && (
-                        <option value="Admin">Manager</option>
-                      )}
+                      {user?.role.toLowerCase() === "superadmin" && <option value="Admin">Manager</option>}
                       <option value="Tester">Tester</option>
                       <option value="Developer">Developer</option>
                     </Field>
-                    <ErrorMessage
-                      name="role"
-                      component="div"
-                      className="text-red-500 text-xs mt-1"
-                    />
+                    <ErrorMessage name="role" component="div" className="text-red-500 text-xs mt-1" />
                   </div>
 
                   <div>
                     <label htmlFor="team" className="label">
                       Team
                     </label>
-                    <Field
-                      type="text"
-                      id="team"
-                      name="team"
-                      className="input"
-                    />
+                    <Field type="text" id="team" name="team" className="input" />
                   </div>
 
                   <div>
                     <label htmlFor="jobTitle" className="label">
                       Job Title
                     </label>
-                    <Field
-                      type="text"
-                      id="jobTitle"
-                      name="jobTitle"
-                      className="input"
-                    />
+                    <Field type="text" id="jobTitle" name="jobTitle" className="input" />
                   </div>
 
-                  <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-                    {/* <div>
-                      <label htmlFor="timezone" className="label">
-                        Timezone
-                      </label>
-                      <Field
-                        as="select"
-                        id="timeZone"
-                        name="timeZone"
-                        className="input"
-                      >
-                        <option>Eastern Time (US & Canada)</option>
-                        <option>Central Time (US & Canada)</option>
-                        <option>Pacific Time (US & Canada)</option>
-                        <option>UTC</option>
-                      </Field>
-                    </div> */}
-                    {/* <div>
-                      <label htmlFor="language" className="label">
-                        Language
-                      </label>
-                      <Field
-                        as="select"
-                        id="language"
-                        name="language"
-                        className="input"
-                      >
-                        <option>English</option>
-                        <option>Spanish</option>
-                        <option>French</option>
-                        <option>German</option>
-                      </Field>
-                    </div> */}
-                  </div>
+                  <div className="grid grid-cols-1 gap-4 sm:grid-cols-2"></div>
 
                   <div className="mt-5 sm:mt-6 sm:grid sm:grid-cols-2 sm:gap-3 sm:grid-flow-row-dense">
                     <button

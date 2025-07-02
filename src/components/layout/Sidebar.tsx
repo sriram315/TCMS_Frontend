@@ -28,7 +28,7 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, closeSidebar }) => {
     { name: "Settings", to: "/settings", icon: Settings },
   ];
 
-  const user = JSON.parse(sessionStorage.getItem("user"));
+  const user = JSON.parse(sessionStorage.getItem("user") || "{}");
   !String(user.role).toLowerCase().includes("admin") && delete navigation[1];
   !String(user.role).toLowerCase().includes("admin") && delete navigation[6];
 
@@ -41,11 +41,7 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, closeSidebar }) => {
   return (
     <>
       {/* Mobile sidebar */}
-      <div
-        className={`fixed inset-0 z-40 lg:hidden ${
-          isOpen ? "block" : "hidden"
-        }`}
-      >
+      <div className={`fixed inset-0 z-40 lg:hidden ${isOpen ? "block" : "hidden"}`}>
         <div className="fixed inset-0 bg-gray-600" onClick={closeSidebar}></div>
 
         <div className="fixed inset-0 flex z-40">
@@ -68,11 +64,7 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, closeSidebar }) => {
             <div className="flex-1 h-0 overflow-y-auto pt-5 pb-4">
               <div className="flex-shrink-0 flex items-center px-4">
                 <h1 className="text-primary-600 font-bold text-2xl flex justify-center">
-                  <img
-                    onClick={closeSidebar}
-                    src={TestServ}
-                    className="h-12 w-auto cursor-pointer"
-                  />
+                  <img onClick={closeSidebar} src={TestServ} className="h-12 w-auto cursor-pointer" />
                 </h1>
               </div>
               <nav className="mt-8 space-y-1 px-2">
@@ -89,10 +81,7 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, closeSidebar }) => {
                     }
                     onClick={closeSidebar}
                   >
-                    <item.icon
-                      className="mr-4 h-6 w-6 flex-shrink-0"
-                      aria-hidden="true"
-                    />
+                    <item.icon className="mr-4 h-6 w-6 flex-shrink-0" aria-hidden="true" />
                     {item.name}
                   </NavLink>
                 ))}
@@ -125,34 +114,17 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, closeSidebar }) => {
                   }
                 >
                   <div className="bg-[#303E9C] rounded-[6px] shadow-[0px_4px_6px_0px_rgba(0,_0,_0,_0.2)] mr-3 p-1">
-                    <item.icon
-                      className=" h-5 w-5 flex-shrink-0"
-                      aria-hidden="true"
-                    />
+                    <item.icon className=" h-5 w-5 flex-shrink-0" aria-hidden="true" />
                   </div>
                   {item.name}
                 </NavLink>
               ))}
             </nav>
           </div>
-          {/* <div className="flex-shrink-0 flex border-t border-gray-200 p-4">
-            <div className="flex-shrink-0 w-full block">
-              <div className="flex items-center">
-                <div className="ml-0">
-                  <p className="text-sm font-medium text-gray-700 mb-1">Current Project</p>
-                  <select className="block w-full rounded-md border-0 py-1.5 pl-3 pr-10 text-sm text-gray-900 ring-1 ring-inset ring-gray-300 focus:ring-2 focus:ring-primary-600">
-                    <option>E-commerce Platform</option>
-                    <option>CRM System</option>
-                    <option>Mobile App</option>
-                  </select>
-                </div>
-              </div>
-            </div>
-          </div> */}
         </div>
       </div>
     </>
   );
 };
 
-export default Sidebar;
+export default React.memo(Sidebar);

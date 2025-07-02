@@ -6,8 +6,10 @@ import React, {
   useEffect,
   ReactNode,
 } from "react";
+import { API_URL } from "../config";
 
 interface User {
+  _id: any;
   id: string;
   name: string;
   email: string;
@@ -57,7 +59,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({
     try {
       // Mock login - in a real app, this would call an API
       const response = await axios.post(
-        "http://localhost:5000/api/auth/login",
+        `${API_URL}/auth/login`,
         { email, password }
       );
       if (!response.data.data.user.isApproved)

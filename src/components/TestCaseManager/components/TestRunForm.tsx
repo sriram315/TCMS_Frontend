@@ -8,6 +8,7 @@ import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../../../context/AuthContext";
+import { API_URL } from "../../../config";
 
 interface TestCase {
   _id?: string;
@@ -53,14 +54,13 @@ export default function TestRunForm({ selected }: TestRunFormProps) {
   const [filteredModules, setFilteredModules] = useState([]);
   const [projects, setProjects] = useState([]);
   const [projectUsers, setProjectUsers] = useState([]);
-  // const user = JSON.parse(sessionStorage.getItem("user"));
   const { user: currentUser } = useAuth();
 
   const navigate = useNavigate();
 
   const fetchUsers = async () => {
     try {
-      const { data } = await axios.get("http://localhost:5000/api/users");
+      const { data } = await axios.get(`${API_URL}/users`);
       const userData = data.data.users;
 
       const filteredData =
@@ -79,11 +79,10 @@ export default function TestRunForm({ selected }: TestRunFormProps) {
       console.error("Error fetching users:", error);
     }
   };
-  console.log(users);
 
   const fetchProjects = async () => {
     try {
-      const { data } = await axios.get("http://localhost:5000/api/projects");
+      const { data } = await axios.get(`${API_URL}/projects`);
 
       const filteredProjects =
         currentUser?.role.toLowerCase() === "admin"
@@ -97,7 +96,6 @@ export default function TestRunForm({ selected }: TestRunFormProps) {
       console.error("Error fetching projects:", error);
     }
   };
-  console.log(projects);
   useEffect(() => {
     fetchUsers();
     fetchProjects();
@@ -110,7 +108,7 @@ export default function TestRunForm({ selected }: TestRunFormProps) {
     }
 
     try {
-      const { data } = await axios.get("http://localhost:5000/api/testcases");
+      const { data } = await axios.get(`${API_URL}/testcases`);
       const projectTestCases = data.filter(
         (testCase: TestCase) => testCase.projectId === projectId
       );
@@ -124,11 +122,6 @@ export default function TestRunForm({ selected }: TestRunFormProps) {
       setFilteredModules([]);
     }
   };
-
-  // Remove this useEffect as we don't want to fetch modules on component mount
-  // useEffect(() => {
-  //   fetchModules(projectId);
-  // }, []);
 
   useEffect(() => {
     if (selected) {
@@ -148,7 +141,7 @@ export default function TestRunForm({ selected }: TestRunFormProps) {
     module: string
   ): Promise<string[]> => {
     try {
-      const { data } = await axios.get("http://localhost:5000/api/testcases");
+      const { data } = await axios.get(`${API_URL}/testcases`);
       const testCases = data.filter(
         (testCase: TestCase) => testCase.module === module
       );
@@ -169,13 +162,9 @@ export default function TestRunForm({ selected }: TestRunFormProps) {
     try {
       const testCaseIds = await fetchTestCaseIdsByModule(values.module || "");
 
-      console.log("Captured values:", {
-        ...values,
-        testCases: testCaseIds,
-      });
 
       const res = await axios.post(
-        "http://localhost:5000/api/test-runs",
+        `${API_URL}/test-runs`,
         {
           ...values,
           testCases: testCaseIds,

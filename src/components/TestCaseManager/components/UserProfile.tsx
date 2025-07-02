@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from "react";
+import { API_URL } from "../../../config";
 
 const UserProfile: React.FC<UserProfileProps> = () => {
   const userData = JSON.parse(sessionStorage.getItem("user"));
@@ -6,14 +7,10 @@ const UserProfile: React.FC<UserProfileProps> = () => {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const response = await fetch("http://localhost:5000/api/users");
+        const response = await fetch(`${API_URL}/users`);
         const data = await response.json();
-        console.log(
-          data.data.users.filter((user) => user.name === userData.name)
-        );
-        setUserDetails(
-          data.data.users.filter((user) => user.name === userData.name)?.[0]
-        );
+
+        setUserDetails(data.data.users.filter((user) => user.name === userData.name)?.[0]);
       } catch (error) {
         console.error("Error fetching user data:", error);
       }
@@ -29,14 +26,9 @@ const UserProfile: React.FC<UserProfileProps> = () => {
         <ProfileField label="Email" value={userDetails.email} />
         <ProfileField
           label="Role"
-          value={
-            String(userDetails.role).toLowerCase() === "admin"
-              ? "Manager"
-              : userDetails.role
-          }
+          value={String(userDetails.role).toLowerCase() === "admin" ? "Manager" : userDetails.role}
         />
         <ProfileField label="Job Title" value={userDetails.jobTitle} />
-        {/* <ProfileField label="Language" value={userDetails.language} /> */}
       </div>
     </div>
   );

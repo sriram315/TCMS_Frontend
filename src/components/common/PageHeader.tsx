@@ -30,4 +30,4 @@ const PageHeader: React.FC<PageHeaderProps> = ({
   );
 };
 
-export default PageHeader;
+export default React.memo(PageHeader);

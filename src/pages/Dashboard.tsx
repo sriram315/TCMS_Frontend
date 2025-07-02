@@ -1,14 +1,6 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback, useMemo } from "react";
 import axios from "axios";
-import {
-  PlayCircle,
-  CheckCircle,
-  XCircle,
-  ClipboardList,
-  BarChart,
-  MinusCircle,
-  HelpCircle,
-} from "lucide-react";
+import { PlayCircle, CheckCircle, XCircle, ClipboardList, BarChart, MinusCircle, HelpCircle } from "lucide-react";
 
 import PageHeader from "../components/common/PageHeader";
 import StatCard from "../components/dashboard/StatCard";
@@ -27,6 +19,7 @@ import {
 } from "recharts";
 import { Link } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
+import { API_URL } from "../config";
 
 const Dashboard: React.FC = () => {
   // State to hold status counts as an object
@@ -37,7 +30,8 @@ const Dashboard: React.FC = () => {
     Blocked: 0,
     Total: 0,
   });
-  const [testProgressData, setTestProgressData] = useState([]);
+  type WeeklyStat = { name: string; passed: number; failed: number; [key: string]: any };
+  const [testProgressData, setTestProgressData] = useState<WeeklyStat[]>([]);
 
   // State for testStatusData to update PieChart
   const [testStatusData, setTestStatusData] = useState([
@@ -47,21 +41,41 @@ const Dashboard: React.FC = () => {
     { name: "Untested", value: 0, color: "#E5E7EB" },
   ]);
 
-  const [testRuns, setTestRuns] = useState([]);
-  const [testCases, setTestCases] = useState([]);
-  const [projects, setProjects] = useState([]);
+  type TestRun = {
+    _id: string;
+    name: string;
+    createdBy?: { _id: string; name?: string };
+    assignedTo?: { _id: string; name?: string };
+    dueDateFrom?: string;
+    testCases?: any[];
+    // Add other properties as needed
+  };
+  const [testRuns, setTestRuns] = useState<TestRun[]>([]);
+  type Project = {
+    _id: string;
+    name: string;
+    createdBy?: { _id: string };
+    testCases?: any[];
+    // Add other properties as needed
+  };
+  const [projects, setProjects] = useState<Project[]>([]);
   const { user: currentUser } = useAuth();
+  type Activity = {
+    _id: string;
+    [key: string]: any; // Add more specific properties as needed
+  };
+  const [activities, setActivities] = useState<Activity[]>([]);
 
-  const fetchProjects = async () => {
+  const fetchProjects = useCallback(async () => {
     try {
-      const { data } = await axios.get("http://localhost:5000/api/projects");
+      const { data } = await axios.get(`${API_URL}/projects`);
       setProjects(data);
       // Store projects in sessionStorage to persist between refreshes
       sessionStorage.setItem("projectData", JSON.stringify(data));
     } catch (error) {
       console.error("Error fetching projects:", error);
     }
-  };
+  }, []);
 
   useEffect(() => {
     // Try to load projects from sessionStorage first
@@ -85,9 +99,58 @@ const Dashboard: React.FC = () => {
     // fetchTestCases(); // Remove this line
   }, []);
 
-  const fetchTestRuns = async () => {
+  // Format date for display
+  const formatDate = (dueDate: string) => {
+    const date = new Date(dueDate);
+    const today = new Date();
+    const tomorrow = new Date(today);
+    tomorrow.setDate(today.getDate() + 1);
+
+    if (date.toDateString() === today.toDateString()) {
+      return "Today";
+    } else if (date.toDateString() === tomorrow.toDateString()) {
+      return "Tomorrow";
+    } else {
+      return date.toLocaleDateString("en-US", {
+        month: "short",
+        day: "numeric",
+      });
+    }
+  };
+
+  // Helper to get ISO week number
+  const getWeekNumber = (date: number | Date) => {
+    const firstDay = new Date(date.getFullYear(), 0, 1);
+    const pastDaysOfYear = (date - firstDay) / 86400000;
+    return Math.ceil((pastDaysOfYear + firstDay.getDay() + 1) / 7);
+  };
+  const generateWeeklyStats = (testCases: any[]) => {
+    const weeks = {};
+
+    testCases.forEach((test: { updatedAt: string | number | Date; status: any }) => {
+      const updatedAt = new Date(test.updatedAt);
+      const week = `Week ${getWeekNumber(updatedAt)}`;
+
+      if (!weeks[week]) {
+        weeks[week] = { passed: 0, failed: 0 };
+      }
+
+      if (String(test.status).toLowerCase() === "passed") {
+        weeks[week].passed += 1;
+      } else if (String(test.status).toLowerCase() === "failed") {
+        weeks[week].failed += 1;
+      }
+    });
+
+    return Object.entries(weeks).map(([week, counts]) => ({
+      name: week,
+      ...(typeof counts === "object" && counts !== null ? counts : {}),
+    }));
+  };
+
+  const fetchTestRuns = useCallback(async () => {
     try {
-      const { data } = await axios.get("http://localhost:5000/api/test-runs");
+      const { data } = await axios.get(`${API_URL}/test-runs`);
 
       // Updated filtering logic for testRuns based on user roles
       let filteredData;
@@ -96,22 +159,18 @@ const Dashboard: React.FC = () => {
         filteredData = data;
       } else if (String(role).toLowerCase() === "admin") {
         // If admin, show test runs created by admin
-        filteredData = data.filter(
-          (testRun) => testRun?.createdBy?._id === userId
-        );
+        filteredData = data.filter((testRun: { createdBy: { _id: any } }) => testRun?.createdBy?._id === userId);
       } else {
         // For other users, show test runs assigned to them
-        filteredData = data.filter(
-          (testRun) => testRun?.assignedTo?._id === userId
-        );
+        filteredData = data.filter((testRun: { assignedTo: { _id: any } }) => testRun?.assignedTo?._id === userId);
       }
 
       setTestRuns(filteredData);
     } catch (error) {
       console.error("Error fetching test runs:", error);
     }
-  };
-  const calculateTestRunStats = (testCases) => {
+  }, []);
+  const calculateTestRunStats = useCallback((testCases: string | any[]) => {
     const stats = {
       passed: 0,
       failed: 0,
@@ -120,7 +179,7 @@ const Dashboard: React.FC = () => {
       total: testCases?.length || 0,
     };
 
-    (testCases || []).forEach((testCase, index) => {
+    (testCases || []).forEach((testCase: { status: string }, index: any) => {
       const status = testCase?.status?.toLowerCase() || "";
       switch (status) {
         case "passed":
@@ -143,52 +202,41 @@ const Dashboard: React.FC = () => {
 
     // Calculate progress as the percentage of test cases that are not untested
     const completedTests = stats.passed + stats.failed + stats.blocked;
-    const progress =
-      stats.total > 0 ? Math.round((completedTests / stats.total) * 100) : 0;
+    const progress = stats.total > 0 ? Math.round((completedTests / stats.total) * 100) : 0;
 
     // Determine test run status based on test case counts
     let testRunStatus = "Not Started";
     if (stats.total === stats.untested) {
       testRunStatus = "Not Started";
-    } else if (
-      stats.untested === 0 &&
-      stats.passed + stats.failed + stats.blocked === stats.total
-    ) {
+    } else if (stats.untested === 0 && stats.passed + stats.failed + stats.blocked === stats.total) {
       testRunStatus = "Completed";
-    } else if (
-      stats.untested < stats.total &&
-      (stats.passed > 0 || stats.failed > 0 || stats.blocked > 0)
-    ) {
+    } else if (stats.untested < stats.total && (stats.passed > 0 || stats.failed > 0 || stats.blocked > 0)) {
       testRunStatus = "In Progress";
     }
 
     return { stats, progress, testRunStatus };
-  };
-  const user = JSON.parse(sessionStorage.getItem("user"));
+  }, []);
+  const user = JSON.parse(sessionStorage.getItem("user") || "{}");
   const name = user.email;
-  const name2 = user.name;
   const role = user.role;
   const userId = user._id;
 
-  const fetchTestCases = async () => {
+  const fetchTestCases = useCallback(async () => {
     try {
-      const { data } = await axios.get("http://localhost:5000/api/testcases");
+      const { data } = await axios.get(`${API_URL}/testcases`);
 
       const filteredData =
         String(role).toLowerCase() === "superadmin"
           ? data
           : String(role).toLowerCase() === "admin"
           ? projects
-              .filter((project) => project?.createdBy?._id === currentUser._id)
+              .filter((project) => currentUser && project?.createdBy?._id === currentUser._id)
               .flatMap((project) => project.testCases)
-          : data.filter((testCase) => testCase.createdBy === name);
-
-      setTestCases(filteredData);
+          : data.filter((testCase: { createdBy: any }) => testCase.createdBy === name);
 
       setTestProgressData(generateWeeklyStats(filteredData));
       // Use the helper function
-      const { stats, progress, testRunStatus } =
-        calculateTestRunStats(filteredData);
+      const { stats } = calculateTestRunStats(filteredData);
 
       // Update state
       setTestStatus({
@@ -224,7 +272,7 @@ const Dashboard: React.FC = () => {
     } catch (error) {
       console.error("Error fetching test cases:", error);
     }
-  };
+  }, [role, projects, generateWeeklyStats, calculateTestRunStats, currentUser ? currentUser._id : null, name]);
 
   useEffect(() => {
     fetchTestRuns();
@@ -236,13 +284,9 @@ const Dashboard: React.FC = () => {
     return Math.trunc((value / total) * 100);
   }
 
-  const [activities, setActivities] = useState([]);
-
-  const fetchActivity = async () => {
+  const fetchActivity = useCallback(async () => {
     try {
-      const response = await axios.get(
-        "http://localhost:5000/api/recent-activity"
-      );
+      const response = await axios.get(`${API_URL}/recent-activity`);
       const data = response.data;
 
       // Updated filtering logic based on user roles
@@ -253,147 +297,61 @@ const Dashboard: React.FC = () => {
       } else if (String(role).toLowerCase() === "admin") {
         // If admin, show activities created by admin and users created by this admin
         filteredData = data.filter(
-          (activity) =>
-            activity?.createdBy?._id === userId ||
-            activity?.createdBy?.accountCreatedBy === userId
+          (activity: { createdBy: { _id: any; accountCreatedBy: any } }) =>
+            activity?.createdBy?._id === userId || activity?.createdBy?.accountCreatedBy === userId
         );
       } else {
         // For other users, show only their own activities
-        filteredData = data?.filter(
-          (activity) => activity?.createdBy?._id === userId
-        );
+        filteredData = data?.filter((activity: { createdBy: { _id: any } }) => activity?.createdBy?._id === userId);
       }
 
       setActivities(filteredData);
     } catch (error) {
       console.error("Error fetching activities:", error);
     }
-  };
+  }, [API_URL, role, userId]);
 
   useEffect(() => {
     fetchActivity();
   }, []);
 
-  const filteredByRole =
-    String(role).toLowerCase() === "superadmin"
-      ? testRuns
-      : String(role).toLowerCase() === "admin"
-      ? testRuns.filter((testRun) => testRun?.createdBy?._id === userId)
-      : testRuns.filter((testRun: any) => testRun?.assignedTo?._id === userId);
-
-  const upcomingTestRuns = filteredByRole.filter(
-    (testRun: { dueDateFrom: string }) =>
-      new Date(testRun.dueDateFrom).getTime() > Date.now()
+  const filteredByRole = useMemo(
+    () =>
+      String(role).toLowerCase() === "superadmin"
+        ? testRuns
+        : String(role).toLowerCase() === "admin"
+        ? testRuns.filter((testRun) => testRun?.createdBy?._id === userId)
+        : testRuns.filter((testRun: any) => testRun?.assignedTo?._id === userId),
+    [role, testRuns, userId]
   );
 
-  // Filter upcoming test runs (dueDate > Date.now())
-  // const upcomingTestRuns = testRuns.filter(
-  //   (testRun: { dueDateFrom: string }) => {
-  //     return new Date(testRun.dueDateFrom).getTime() > Date.now();
-  //   }
-  // );
+  const upcomingTestRuns = useMemo(
+    () =>
+      filteredByRole.filter((testRun: { dueDateFrom: string }) => new Date(testRun.dueDateFrom).getTime() > Date.now()),
+    [filteredByRole]
+  );
 
-  // Format date for display
-  const formatDate = (dueDate: string) => {
-    const date = new Date(dueDate);
-    const today = new Date();
-    const tomorrow = new Date(today);
-    tomorrow.setDate(today.getDate() + 1);
-
-    if (date.toDateString() === today.toDateString()) {
-      return "Today";
-    } else if (date.toDateString() === tomorrow.toDateString()) {
-      return "Tomorrow";
-    } else {
-      return date.toLocaleDateString("en-US", {
-        month: "short",
-        day: "numeric",
-      });
-    }
-  };
-
-  const generateMonthlyStats = (testCases) => {
-    const months = {};
-
-    testCases.forEach((test) => {
-      const updatedAt = new Date(test.updatedAt);
-      const monthYear = updatedAt.toLocaleString("default", {
-        month: "short",
-        year: "numeric",
-      }); // e.g., "May 2025"
-
-      if (!months[monthYear]) {
-        months[monthYear] = { passed: 0, failed: 0 };
-      }
-
-      const status = String(test.status).toLowerCase();
-
-      if (status === "passed") {
-        months[monthYear].passed += 1;
-      } else if (status === "failed") {
-        months[monthYear].failed += 1;
-      }
-    });
-
-    return Object.entries(months).map(([month, counts]) => ({
-      name: month,
-      ...counts,
-    }));
-  };
-  // Helper to get ISO week number
-  const getWeekNumber = (date) => {
-    const firstDay = new Date(date.getFullYear(), 0, 1);
-    const pastDaysOfYear = (date - firstDay) / 86400000;
-    return Math.ceil((pastDaysOfYear + firstDay.getDay() + 1) / 7);
-  };
-  const generateWeeklyStats = (testCases) => {
-    const weeks = {};
-
-    testCases.forEach((test) => {
-      const updatedAt = new Date(test.updatedAt);
-      const week = `Week ${getWeekNumber(updatedAt)}`;
-
-      if (!weeks[week]) {
-        weeks[week] = { passed: 0, failed: 0 };
-      }
-
-      if (String(test.status).toLowerCase() === "passed") {
-        weeks[week].passed += 1;
-      } else if (String(test.status).toLowerCase() === "failed") {
-        weeks[week].failed += 1;
-      }
-    });
-
-    return Object.entries(weeks).map(([week, counts]) => ({
-      name: week,
-      ...counts,
-    }));
-  };
-
-  const getTestRunProgressStatus = (testRuns) => {
-    return testRuns.map((run) => {
+  const getTestRunProgressStatus = useCallback((testRuns: any[]) => {
+    return testRuns.map((run: { testCases: never[] }) => {
       const testCases = run.testCases || [];
 
       if (testCases.length === 0) {
         return "not started";
       }
 
-      const statuses = testCases.map((tc) => tc.status);
-      const allUntested = statuses.every(
-        (status) => String(status).toLowerCase() === "untested"
-      );
-      const noneUntested = statuses.every(
-        (status) => String(status).toLowerCase() !== "untested"
-      );
+      const statuses = testCases.map((tc: { status: any }) => tc.status);
+      const allUntested = statuses.every((status: any) => String(status).toLowerCase() === "untested");
+      const noneUntested = statuses.every((status: any) => String(status).toLowerCase() !== "untested");
 
       if (allUntested) return "not started";
       if (noneUntested) return "completed";
       return "inprogress";
     });
-  };
+  }, []);
 
-  const testRunProgressStatus = getTestRunProgressStatus(testRuns).filter(
-    (status) => status === "inprogress"
+  const testRunProgressStatus = useMemo(
+    () => getTestRunProgressStatus(testRuns).filter((status: string) => status === "inprogress"),
+    [testRuns, getTestRunProgressStatus]
   );
 
   return (
@@ -417,7 +375,7 @@ const Dashboard: React.FC = () => {
           title="Untested Test Cases"
           value={testStatus.Untested}
           icon={<HelpCircle className="h-6 w-6" />}
-          color="#bdc3c7"
+          color="secondary"
         />
 
         <StatCard
@@ -466,34 +424,14 @@ const Dashboard: React.FC = () => {
                 <span className=" text-gray-500">No data available</span>
               ) : (
                 <ResponsiveContainer width="100%" height={300}>
-                  <LineChart
-                    data={testProgressData}
-                    margin={{ top: 5, right: 30, left: 20, bottom: 5 }}
-                  >
+                  <LineChart data={testProgressData} margin={{ top: 5, right: 30, left: 20, bottom: 5 }}>
                     <CartesianGrid strokeDasharray="3 3" />
                     <XAxis dataKey="name" />
                     <YAxis />
                     <Tooltip />
-                    <Line
-                      type="monotone"
-                      dataKey="passed"
-                      stroke="#22C55E"
-                      strokeWidth={2}
-                      activeDot={{ r: 8 }}
-                    />
-                    <Line
-                      type="monotone"
-                      dataKey="failed"
-                      stroke="#EF4444"
-                      strokeWidth={2}
-                    />
-                    <Line
-                      type="monotone"
-                      dataKey="total"
-                      stroke="#3B82F6"
-                      strokeWidth={2}
-                      strokeDasharray="5 5"
-                    />
+                    <Line type="monotone" dataKey="passed" stroke="#22C55E" strokeWidth={2} activeDot={{ r: 8 }} />
+                    <Line type="monotone" dataKey="failed" stroke="#EF4444" strokeWidth={2} />
+                    <Line type="monotone" dataKey="total" stroke="#3B82F6" strokeWidth={2} strokeDasharray="5 5" />
                   </LineChart>
                 </ResponsiveContainer>
               )}
@@ -504,9 +442,7 @@ const Dashboard: React.FC = () => {
         <div>
           <div className="card h-full">
             <div className="card-header">
-              <h3 className="text-lg font-semibold text-gray-900">
-                Test status
-              </h3>
+              <h3 className="text-lg font-semibold text-gray-900">Test status</h3>
             </div>
             <div className="card-body flex flex-col items-center justify-center">
               {testStatusData.every((item) => item.value === 0) ? (
@@ -529,13 +465,7 @@ const Dashboard: React.FC = () => {
                         <Cell key={`cell-${index}`} fill={entry.color} />
                       ))}
                     </Pie>
-                    <Tooltip
-                      formatter={(value: number, name: string) =>
-                        `${Math.trunc(
-                          (value / (testStatus.Total || 1)) * 100
-                        )}%`
-                      }
-                    />
+                    <Tooltip formatter={(value: number) => `${Math.trunc((value / (testStatus.Total || 1)) * 100)}%`} />
                   </PieChart>
                 </ResponsiveContainer>
               )}
@@ -549,8 +479,7 @@ const Dashboard: React.FC = () => {
                         backgroundColor:
                           title === "Total"
                             ? "#6B7280"
-                            : testStatusData.find((data) => data.name === title)
-                                ?.color || "#6B7280",
+                            : testStatusData.find((data) => data.name === title)?.color || "#6B7280",
                       }}
                     ></span>
                     <span className="text-sm text-gray-700">
@@ -564,80 +493,65 @@ const Dashboard: React.FC = () => {
         </div>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        <div className="card">
-          <div className="card-header">
-            <h3 className="text-lg font-semibold text-gray-900">
-              Recent activity
-            </h3>
+   <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+  {/* Recent Activity */}
+  <div className="card h-96 flex flex-col">
+    <div className="card-header px-6 py-4 flex-shrink-0">
+      <h3 className="text-lg font-semibold text-gray-900">Recent activity</h3>
+    </div>
+    <div className="divide-y divide-gray-200 overflow-y-auto flex-1">
+      {activities.length > 0 ? (
+        activities.map((activity) => (
+          <div key={activity._id} className="px-6 py-3">
+            <ActivityItem activity={activity} />
           </div>
-          <div className="divide-y divide-gray-200 h-96 overflow-y-auto">
-            {activities.length > 0 ? (
-              activities.map((activity) => (
-                <div key={activity._id} className="px-6 py-3">
-                  <ActivityItem activity={activity} />
-                </div>
-              ))
-            ) : (
-              <div className="h-full relative">
-                <span className=" absolute text-gray-500 mx-6 my-8">
-                  No Activities.
-                </span>
-              </div>
-            )}
-          </div>
+        ))
+      ) : (
+        <div className="flex items-center justify-center h-full text-sm text-gray-500">
+          No Activities.
         </div>
+      )}
+    </div>
+  </div>
 
-        <div className="card">
-          <div className="card-header">
-            <h3 className="text-lg font-semibold text-gray-900">
-              Upcoming Test Runs
-            </h3>
-          </div>
-          <div className="card-body">
-            <ul className="divide-y divide-gray-200 h-96 overflow-y-auto">
-              {upcomingTestRuns.length > 0 ? (
-                upcomingTestRuns.map(
-                  (testRun: {
-                    _id: string;
-                    name: string;
-                    assignedTo: string;
-                    dueDateFrom: string;
-                  }) => (
-                    <li key={testRun._id} className="py-3">
-                      <div className="flex justify-between">
-                        <div>
-                          <p className="text-sm font-medium text-gray-900">
-                            {testRun.name}
-                          </p>
-                          <p className="text-sm text-gray-500">
-                            Assigned to: {testRun?.assignedTo?.name}
-                          </p>
-                        </div>
-                        <div className="text-sm text-gray-500">
-                          {formatDate(testRun.dueDateFrom)}
-                        </div>
-                      </div>
-                    </li>
-                  )
-                )
-              ) : (
-                <li className="py-3">
-                  <p className=" text-gray-500">No upcoming test runs.</p>
-                </li>
-              )}
-            </ul>
-          </div>
-          <div className="card-footer">
-            <Link
-              to="/test-runs"
-              className="text-sm font-medium text-primary-600 hover:text-primary-500"
-            >
-              View all test runs →
-            </Link>
-          </div>
-        </div>
-      </div>
+  {/* Upcoming Test Runs */}
+  <div className="card h-96 flex flex-col">
+    <div className="card-header px-6 py-4 flex-shrink-0">
+      <h3 className="text-lg font-semibold text-gray-900">Upcoming Test Runs</h3>
+    </div>
+    <div className="card-body overflow-y-auto flex-1 divide-y divide-gray-200 px-6">
+      <ul>
+        {upcomingTestRuns.length > 0 ? (
+          upcomingTestRuns.map((testRun) => (
+            <li key={testRun._id} className="py-3">
+              <div className="flex justify-between">
+                <div>
+                  <p className="text-sm font-medium text-gray-900">{testRun.name}</p>
+                  <p className="text-sm text-gray-500">
+                    Assigned to: {testRun?.assignedTo?.name}
+                  </p>
+                </div>
+                <div className="text-sm text-gray-500">
+                  {formatDate(testRun?.dueDateFrom || "")}
+                </div>
+              </div>
+            </li>
+          ))
+        ) : (
+          <li className="py-3 text-sm text-gray-500">No upcoming test runs.</li>
+        )}
+      </ul>
+    </div>
+    <div className="card-footer px-6 py-2 flex-shrink-0">
+      <Link
+        to="/test-runs"
+        className="text-sm font-medium text-primary-600 hover:text-primary-500"
+      >
+        View all test runs →
+      </Link>
+    </div>
+  </div>
+</div>
     </div>
   );
 };

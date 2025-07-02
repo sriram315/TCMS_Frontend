@@ -1,22 +1,13 @@
-import React, { useEffect, useState } from "react";
+import React, { useCallback, useEffect, useState } from "react";
 import PageHeader from "../components/common/PageHeader";
-import {
-  User,
-  Users,
-  Shield,
-  Save,
-  Check,
-  Edit,
-  X,
-  CheckCircle,
-  XCircle,
-} from "lucide-react";
+import { User, Users, Shield, Save, Check, Edit, X, CheckCircle, XCircle } from "lucide-react";
 import { useAuth } from "../context/AuthContext";
 import axios from "axios";
 import { Formik, Form, Field, ErrorMessage } from "formik";
 import * as Yup from "yup";
 import AddUserModal from "../components/AddUserModal";
 import { toast, ToastContainer } from "react-toastify";
+import { API_URL } from "../config";
 
 // Validation schema for the profile form
 const ProfileSchema = Yup.object().shape({
@@ -58,16 +49,15 @@ const Settings: React.FC = () => {
       localStorage.removeItem("settingsActiveTab");
     };
   }, []);
-  const fetchUsers = async () => {
+  const fetchUsers = useCallback(async () => {
     try {
-      const { data } = await axios.get("http://localhost:5000/api/users");
-      console.log(data.data.users);
+      const { data } = await axios.get(`${API_URL}/users`);
       const filteredUsers =
         currentUser?.role?.toLowerCase() === "superadmin"
           ? data.data.users
           : currentUser?.role?.toLowerCase() === "admin"
           ? data.data.users.filter(
-              (user) => user?.accountCreatedBy?._id === currentUser?._id
+              (user: { accountCreatedBy: { _id: any } }) => user?.accountCreatedBy?._id === currentUser?._id
             )
           : data.data.users;
       // Update the state with the fetched users, excluding the superadmin ro
@@ -75,57 +65,53 @@ const Settings: React.FC = () => {
     } catch (error) {
       console.error("Error fetching users:", error);
     }
-  };
+  }, [API_URL, currentUser]);
 
   useEffect(() => {
     fetchUsers();
   }, []);
 
   // Handle form submission for profile
-  const handleSubmit = async (values, { setSubmitting }) => {
-    try {
-      const response = await axios.put(
-        `http://localhost:5000/api/users/${user._id}`,
-        values
-      );
+  const handleSubmit = useCallback(
+    async (values: any, { setSubmitting }: any) => {
+      try {
+        if (!user) {
+          toast.error("User not found. Please log in again.");
+          setSubmitting(false);
+          return;
+        }
+        const response = await axios.put(`${API_URL}/users/${user._id}`, values);
 
-      if (response.status === 200) {
-        setUser(response.data.updatedUser);
-        sessionStorage.setItem(
-          "user",
-          JSON.stringify(response.data.updatedUser)
-        );
+        if (response.status === 200) {
+          setUser(response.data.updatedUser);
+          sessionStorage.setItem("user", JSON.stringify(response.data.updatedUser));
+        }
+
+        if (response.status === 200) {
+          toast.success("Profile updated successfully", {
+            position: "top-right",
+            autoClose: 3000,
+            hideProgressBar: false,
+          });
+        }
+        setTimeout(() => setSaveSuccess(false), 3000);
+      } catch (error: any) {
+        console.error("Error updating profile:", error);
+        toast.error(error.response?.data?.message || "Failed to update profile. Please try again.");
+      } finally {
+        setSubmitting(false);
       }
+    },
+    [API_URL, user?._id]
+  );
 
-      if (response.status === 200) {
-        toast.success("Profile updated successfully", {
-          position: "top-right",
-          autoClose: 3000,
-          hideProgressBar: false,
-        });
-      }
-      setTimeout(() => setSaveSuccess(false), 3000);
-    } catch (error: any) {
-      console.error("Error updating profile:", error);
-      toast.error(
-        error.response?.data?.message ||
-          "Failed to update profile. Please try again."
-      );
-    } finally {
-      setSubmitting(false);
-    }
-  };
-
-  const handleAddUser = async (userData) => {
+  const handleAddUser = async (userData: any) => {
     let finalData = userData;
     if (String(loggedInUser.role).toLowerCase() == "superadmin") {
       finalData = { ...finalData, isApproved: true };
     }
     try {
-      const response = await axios.post(
-        "http://localhost:5000/api/auth/register",
-        finalData
-      );
+      const response = await axios.post(`${API_URL}/auth/register`, finalData);
 
       if (response.status === 201) {
         fetchUsers();
@@ -138,14 +124,12 @@ const Settings: React.FC = () => {
       }
     } catch (error: any) {
       console.error("Error adding user:", error);
-      toast.error(
-        error.response?.data?.message || "Failed to add user. Please try again."
-      );
+      toast.error(error.response?.data?.message || "Failed to add user. Please try again.");
     }
   };
 
   // Handle edit button click
-  const handleEditClick = (user) => {
+  const handleEditClick = (user: any) => {
     setEditingUserId(user._id);
     setEditedUserData({ role: user.role, team: user.team });
   };
@@ -157,7 +141,7 @@ const Settings: React.FC = () => {
   };
 
   // Handle save edit
-  const handleSaveEdit = async (userId) => {
+  const handleSaveEdit = async (userId: any) => {
     try {
       // Prepare data with N/A for empty team
       const dataToUpdate = {
@@ -165,10 +149,7 @@ const Settings: React.FC = () => {
         team: editedUserData.team.trim() === "" ? "N/A" : editedUserData.team,
       };
 
-      const response = await axios.put(
-        `http://localhost:5000/api/users/${userId}`,
-        dataToUpdate
-      );
+      const response = await axios.put(`${API_URL}/users/${userId}`, dataToUpdate);
 
       if (response.status === 200) {
         toast.success("User updated successfully", {
@@ -190,12 +171,8 @@ const Settings: React.FC = () => {
   let roles = ["Admin", "Tester", "Developer"];
   String(loggedInUser.role).toLowerCase() == "admin" && roles.shift();
 
-  const handleUpdateUser = async (userId) => {
-    const response = await axios.put(
-      `http://localhost:5000/api/users/${userId}`,
-      { isApproved: true }
-    );
-    console.log(response);
+  const handleUpdateUser = async (userId: any) => {
+    const response = await axios.put(`${API_URL}/users/${userId}`, { isApproved: true });
 
     if (response.status === 200) {
       fetchUsers();
@@ -207,11 +184,8 @@ const Settings: React.FC = () => {
     }
   };
 
-  const handleDeleteUser = async (userId) => {
-    const response = await axios.delete(
-      `http://localhost:5000/api/users/${userId}`
-    );
-    console.log(response);
+  const handleDeleteUser = async (userId: any) => {
+    const response = await axios.delete(`${API_URL}/users/${userId}`);
 
     if (response.status === 200) {
       fetchUsers();
@@ -225,10 +199,7 @@ const Settings: React.FC = () => {
 
   return (
     <div>
-      <PageHeader
-        title="Settings"
-        description="Manage your account and application settings"
-      />
+      <PageHeader title="Settings" description="Manage your account and application settings" />
 
       <div className="bg-white shadow-sm rounded-lg border border-gray-200 overflow-hidden">
         <div className="sm:flex sm:items-start">
@@ -273,9 +244,7 @@ const Settings: React.FC = () => {
           <div className="p-6 border-l flex-1">
             {activeTab === "profile" && (
               <div>
-                <h3 className="text-lg font-semibold leading-6 text-gray-900 mb-6">
-                  Profile Settings
-                </h3>
+                <h3 className="text-lg font-semibold leading-6 text-gray-900 mb-6">Profile Settings</h3>
 
                 <Formik
                   initialValues={{
@@ -294,83 +263,26 @@ const Settings: React.FC = () => {
                         <label htmlFor="name" className="label">
                           Name
                         </label>
-                        <Field
-                          type="text"
-                          id="name"
-                          name="name"
-                          className="input"
-                        />
-                        <ErrorMessage
-                          name="name"
-                          component="div"
-                          className="text-red-500 text-sm mt-1"
-                        />
+                        <Field type="text" id="name" name="name" className="input" />
+                        <ErrorMessage name="name" component="div" className="text-red-500 text-sm mt-1" />
                       </div>
 
                       <div>
                         <label htmlFor="email" className="label">
                           Email Address
                         </label>
-                        <Field
-                          disabled
-                          type="email"
-                          id="email"
-                          name="email"
-                          className="input"
-                        />
-                        <ErrorMessage
-                          name="email"
-                          component="div"
-                          className="text-red-500 text-sm mt-1"
-                        />
+                        <Field disabled type="email" id="email" name="email" className="input" />
+                        <ErrorMessage name="email" component="div" className="text-red-500 text-sm mt-1" />
                       </div>
 
                       <div>
                         <label htmlFor="jobTitle" className="label">
                           Job Title
                         </label>
-                        <Field
-                          type="text"
-                          id="jobTitle"
-                          name="jobTitle"
-                          className="input"
-                        />
+                        <Field type="text" id="jobTitle" name="jobTitle" className="input" />
                       </div>
 
-                      <div className="grid grid-cols-1 gap-6 sm:grid-cols-2">
-                        {/* <div>
-                          <label htmlFor="timezone" className="label">
-                            Timezone
-                          </label>
-                          <Field
-                            as="select"
-                            id="timezone"
-                            name="timezone"
-                            className="input"
-                          >
-                            <option>Eastern Time (US & Canada)</option>
-                            <option>Central Time (US & Canada)</option>
-                            <option>Pacific Time (US & Canada)</option>
-                            <option>UTC</option>
-                          </Field>
-                        </div> */}
-                        {/* <div>
-                          <label htmlFor="language" className="label">
-                            Language
-                          </label>
-                          <Field
-                            as="select"
-                            id="language"
-                            name="language"
-                            className="input"
-                          >
-                            <option>English</option>
-                            <option>Spanish</option>
-                            <option>French</option>
-                            <option>German</option>
-                          </Field>
-                        </div> */}
-                      </div>
+                      <div className="grid grid-cols-1 gap-6 sm:grid-cols-2"></div>
 
                       <div className="mt-6 flex justify-end">
                         {saveSuccess && (
@@ -380,11 +292,7 @@ const Settings: React.FC = () => {
                           </div>
                         )}
 
-                        <button
-                          type="submit"
-                          className="btn btn-primary bg-indigo-900"
-                          disabled={isSubmitting}
-                        >
+                        <button type="submit" className="btn btn-primary bg-indigo-900" disabled={isSubmitting}>
                           <Save className="h-4 w-4 mr-2" />
                           {isSubmitting ? "Saving..." : "Save Changes"}
                         </button>
@@ -397,71 +305,47 @@ const Settings: React.FC = () => {
 
             {activeTab === "users" && (
               <div>
-                <h3 className="text-lg font-semibold leading-6 text-gray-900">
-                  Users & Teams
-                </h3>
-                <p className="text-gray-500 my-4">
-                  Manage users and team access to your projects.
-                </p>
+                <h3 className="text-lg font-semibold leading-6 text-gray-900">Users & Teams</h3>
+                <p className="text-gray-500 my-4">Manage users and team access to your projects.</p>
                 <div className="overflow-hidden border border-gray-200 rounded-lg">
                   <table className="min-w-full divide-y divide-gray-300">
                     <thead className="bg-gray-50">
                       <tr>
-                        <th
-                          scope="col"
-                          className="py-3.5 pl-4 pr-3 text-left text-sm font-semibold text-gray-900"
-                        >
+                        <th scope="col" className="py-3.5 pl-4 pr-3 text-left text-sm font-semibold text-gray-900">
                           Name
                         </th>
-                        <th
-                          scope="col"
-                          className="px-3 py-3.5 text-left text-sm font-semibold text-gray-900"
-                        >
+                        <th scope="col" className="px-3 py-3.5 text-left text-sm font-semibold text-gray-900">
                           Email
                         </th>
-                        <th
-                          scope="col"
-                          className="px-3 py-3.5 text-left text-sm font-semibold text-gray-900"
-                        >
+                        <th scope="col" className="px-3 py-3.5 text-left text-sm font-semibold text-gray-900">
                           Role
                         </th>
-                        <th
-                          scope="col"
-                          className="px-3 py-3.5 text-left text-sm font-semibold text-gray-900"
-                        >
+                        <th scope="col" className="px-3 py-3.5 text-left text-sm font-semibold text-gray-900">
                           Team
                         </th>
-                        <th
-                          scope="col"
-                          className="px-3 py-3.5 text-left text-sm font-semibold text-gray-900"
-                        >
+                        <th scope="col" className="px-3 py-3.5 text-left text-sm font-semibold text-gray-900">
                           Approval Status
                         </th>
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-gray-200 bg-white">
                       {users
-                        ?.filter((user) => {
-                          const isNotSuperAdmin =
-                            String(user.role).toLowerCase() !== "superadmin";
+                        ?.filter((user: { role: any }) => {
+                          const isNotSuperAdmin = String(user.role).toLowerCase() !== "superadmin";
                           const isAllowedForAdmin =
                             String(loggedInUser.role).toLowerCase() === "admin"
                               ? String(user.role).toLowerCase() !== "admin"
                               : true;
                           return isNotSuperAdmin && isAllowedForAdmin;
                         })
-                        .map((user) => (
+                        .map((user: any) => (
                           <tr key={user._id}>
                             <td className="whitespace-nowrap py-4 pl-4 pr-3 text-sm font-medium text-gray-900">
                               {user.name}
                             </td>
+                            <td className="whitespace-nowrap px-3 py-4 text-sm text-gray-500">{user.email}</td>
                             <td className="whitespace-nowrap px-3 py-4 text-sm text-gray-500">
-                              {user.email}
-                            </td>
-                            <td className="whitespace-nowrap px-3 py-4 text-sm text-gray-500">
-                              {String(user?.role).toLowerCase() === "admin"
-                                ? "Manager"
-                                : user?.role}
+                              {String(user?.role).toLowerCase() === "admin" ? "Manager" : user?.role}
                             </td>
                             <td className="whitespace-nowrap px-3 py-4 text-sm text-gray-500">
                               {user.team ? user.team : "N/A"}
@@ -469,8 +353,7 @@ const Settings: React.FC = () => {
                             <td className="whitespace-nowrap px-3 py-4 text-sm text-gray-500">
                               {user.isApproved ? (
                                 "Approved"
-                              ) : String(loggedInUser?.role).toLowerCase() ===
-                                "superadmin" ? (
+                              ) : String(loggedInUser?.role).toLowerCase() === "superadmin" ? (
                                 <div className="flex items-center space-x-4">
                                   <CheckCircle
                                     className="h-5 w-5 cursor-pointer"
@@ -506,69 +389,47 @@ const Settings: React.FC = () => {
 
             {activeTab === "roles" && (
               <div>
-                <h3 className="text-lg font-semibold leading-6 text-gray-900">
-                  Roles & Permissions
-                </h3>
-                <p className="text-gray-500 my-4">
-                  Manage roles and permissions of users.
-                </p>
+                <h3 className="text-lg font-semibold leading-6 text-gray-900">Roles & Permissions</h3>
+                <p className="text-gray-500 my-4">Manage roles and permissions of users.</p>
 
                 <div className="overflow-hidden border border-gray-200 rounded-lg">
                   <table className="min-w-full divide-y divide-gray-300">
                     <thead className="bg-gray-50">
                       <tr>
-                        <th
-                          scope="col"
-                          className="py-3.5 pl-4 pr-3 text-left text-sm font-semibold text-gray-900"
-                        >
+                        <th scope="col" className="py-3.5 pl-4 pr-3 text-left text-sm font-semibold text-gray-900">
                           Name
                         </th>
-                        <th
-                          scope="col"
-                          className="px-3 py-3.5 text-left text-sm font-semibold text-gray-900"
-                        >
+                        <th scope="col" className="px-3 py-3.5 text-left text-sm font-semibold text-gray-900">
                           Email
                         </th>
-                        <th
-                          scope="col"
-                          className="px-3 py-3.5 text-left text-sm font-semibold text-gray-900"
-                        >
+                        <th scope="col" className="px-3 py-3.5 text-left text-sm font-semibold text-gray-900">
                           Role
                         </th>
-                        <th
-                          scope="col"
-                          className="px-3 py-3.5 text-left text-sm font-semibold text-gray-900"
-                        >
+                        <th scope="col" className="px-3 py-3.5 text-left text-sm font-semibold text-gray-900">
                           Team
                         </th>
 
-                        <th
-                          scope="col"
-                          className="relative py-3.5 pl-3 pr-4 sm:pr-6"
-                        >
+                        <th scope="col" className="relative py-3.5 pl-3 pr-4 sm:pr-6">
                           <span className="sr-only">Edit</span>
                         </th>
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-gray-200 bg-white">
                       {users
-                        ?.filter((user) => {
-                          const isNotSuperAdmin =
-                            String(user.role).toLowerCase() !== "superadmin";
+                        ?.filter((user: { role: any }) => {
+                          const isNotSuperAdmin = String(user.role).toLowerCase() !== "superadmin";
                           const isAllowedForAdmin =
                             String(loggedInUser.role).toLowerCase() === "admin"
                               ? String(user.role).toLowerCase() !== "admin"
                               : true;
                           return isNotSuperAdmin && isAllowedForAdmin;
                         })
-                        .map((user) => (
+                        .map((user: any) => (
                           <tr key={user._id}>
                             <td className="whitespace-nowrap py-4 pl-4 pr-3 text-sm font-medium text-gray-900">
                               {user.name}
                             </td>
-                            <td className="whitespace-nowrap px-3 py-4 text-sm text-gray-500">
-                              {user.email}
-                            </td>
+                            <td className="whitespace-nowrap px-3 py-4 text-sm text-gray-500">{user.email}</td>
                             <td className="whitespace-nowrap px-3 py-4 text-sm text-gray-500">
                               {editingUserId === user._id ? (
                                 <select
@@ -583,14 +444,11 @@ const Settings: React.FC = () => {
                                 >
                                   {roles.map((role) => (
                                     <option key={role} value={role}>
-                                      {String(role).toLowerCase() === "admin"
-                                        ? "Manager"
-                                        : role}
+                                      {String(role).toLowerCase() === "admin" ? "Manager" : role}
                                     </option>
                                   ))}
                                 </select>
-                              ) : String(user.role).toLowerCase() ===
-                                "admin" ? (
+                              ) : String(user.role).toLowerCase() === "admin" ? (
                                 "Manager"
                               ) : (
                                 user.role
@@ -624,10 +482,7 @@ const Settings: React.FC = () => {
                                     <Check className="h-5 w-5" />
                                     <span className="sr-only">Save</span>
                                   </button>
-                                  <button
-                                    onClick={handleCancelEdit}
-                                    className="text-red-600 hover:text-red-900"
-                                  >
+                                  <button onClick={handleCancelEdit} className="text-red-600 hover:text-red-900">
                                     <X className="h-5 w-5" />
                                     <span className="sr-only">Cancel</span>
                                   </button>
@@ -653,11 +508,7 @@ const Settings: React.FC = () => {
           </div>
         </div>
       </div>
-      <AddUserModal
-        isOpen={isAddUserModalOpen}
-        onClose={() => setIsAddUserModalOpen(false)}
-        onSubmit={handleAddUser}
-      />
+      <AddUserModal isOpen={isAddUserModalOpen} onClose={() => setIsAddUserModalOpen(false)} onSubmit={handleAddUser} />
       <ToastContainer />
     </div>
   );

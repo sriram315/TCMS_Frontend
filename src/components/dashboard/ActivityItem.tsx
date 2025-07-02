@@ -1,7 +1,12 @@
-import React from "react";
 import { format } from "date-fns";
+import React, { ReactNode } from "react";
 
 export interface Activity {
+  activity: ReactNode;
+  activityModule: any;
+  type: any;
+  createdAt: string | number | Date;
+  createdBy: any;
   id: string;
   user: {
     name: string;
@@ -16,29 +21,14 @@ export interface Activity {
   date: Date;
 }
 
-interface ActivityItemProps {
-  activity: Activity;
-}
 
-const ActivityItem = ({ activity }) => {
-  const getTargetLink = () => {
-    switch (activity.target.type) {
-      case "test-case":
-        return `/test-cases/${activity.target.id}`;
-      case "test-run":
-        return `/test-runs/${activity.target.id}`;
-      case "test-plan":
-        return `/test-plans/${activity.target.id}`;
-      default:
-        return "#";
-    }
-  };
-  console.log(activity);
+
+const ActivityItem: React.FC<{ activity: Activity }> = ({ activity }) => {
+
 
   return (
     <div className="flex space-x-3 py-3 items-center">
       <div className="h-8 w-8 rounded-full border flex items-center justify-center">
-        {console.log(activity?.createdBy?.name)}
         {activity?.createdBy?.name?.trim("").charAt(0).toUpperCase()}
       </div>
       <div className="flex-1 space-y-1">
@@ -65,4 +55,4 @@ const ActivityItem = ({ activity }) => {
   );
 };
 
-export default ActivityItem;
+export default React.memo(ActivityItem);

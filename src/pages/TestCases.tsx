@@ -1,615 +1,16 @@
-// import React, { useEffect, useState } from "react";
-// import { Link, useNavigate, useLocation } from "react-router-dom";
-// import PageHeader from "../components/common/PageHeader";
-// import {
-//   Plus,
-//   ChevronDownIcon,
-//   Dot,
-//   Search,
-//   RefreshCw,
-//   Upload,
-// } from "lucide-react";
-// import StatusBadge from "../components/common/StatusBadge";
-// import axios from "axios";
-// import { format } from "date-fns";
-
-// const TestCases: React.FC = () => {
-//   const [selectedSection, setSelectedSection] = useState<string | null>(null);
-//   const [testCases, setTestCases] = useState<any[]>([]);
-//   const [categorizedTestCases, setCategorizedTestCases] = useState<any>({});
-//   const [filteredModules, setFileteredModules] = useState<any>({});
-//   const [projects, setProjects] = useState<any[]>([]); // Store minimal project data for dropdown
-//   const [projectMap, setProjectMap] = useState<Record<string, string>>({});
-//   const [selectedProjectId, setSelectedProjectId] = useState("All Projects");
-//   const [allTestCases, setAllTestCases] = useState<any[]>([]);
-//   const [isLoading, setIsLoading] = useState(true);
-//   const [error, setError] = useState<string | null>(null);
-//   const [searchQuery, setSearchQuery] = useState("");
-//   const [showUploadModal, setShowUploadModal] = useState<boolean>(false);
-//   const [uploadFile, setUploadFile] = useState<File | null>(null);
-//   const [uploadProjectId, setUploadProjectId] = useState<string>("");
-//   const [moduleName, setModuleName] = useState<string>("");
-//   const [uploadError, setUploadError] = useState<string | null>(null);
-//   const [allProjects, setAllProjects] = useState([]);
-//   const [isUploading, setIsUploading] = useState<boolean>(false);
-
-//   const navigate = useNavigate();
-//   const { state } = useLocation();
-//   const user = JSON.parse(sessionStorage.getItem("user") || "{}");
-//   const email = user.email;
-//   const role = user.role;
-//   const userId = user._id;
-
-//   const categorizeTestCases = (testCases: any[]) => {
-//     return testCases.reduce((acc: any, testCase: any) => {
-//       const module = testCase.module || "Uncategorized";
-//       if (!acc[module]) {
-//         acc[module] = [];
-//       }
-//       acc[module].push(testCase);
-//       return acc;
-//     }, {});
-//   };
-
-//   useEffect(() => {
-//     axios
-//       .get("http://localhost:5000/api/projects")
-//       .then((response) => {
-//         setAllProjects(response.data);
-
-//         // Filter projects based on user role
-//         let userProjects = [];
-
-//         if (String(role).toLowerCase() === "superadmin") {
-//           // Superadmin sees all projects
-//           userProjects = response.data;
-//         } else if (String(role).toLowerCase() === "admin") {
-//           // Admin sees only projects they created
-//           userProjects = response.data.filter(
-//             (project) => project.createdBy?._id === userId
-//           );
-//         } else {
-//           // Other roles see only projects they're assigned to
-//           userProjects = response.data.filter(
-//             (project) =>
-//               Array.isArray(project.assignedTo) &&
-//               project.assignedTo.some((assignee) => assignee._id === userId)
-//           );
-//         }
-
-//         setProjects(
-//           userProjects.map((project) => ({
-//             _id: project._id,
-//             name: project.name,
-//             assignedTo: project.assignedTo,
-//           }))
-//         );
-
-//         const projectMapUpdate = {};
-//         userProjects.forEach((project) => {
-//           projectMapUpdate[project._id] = project.name;
-//         });
-//         setProjectMap((prev) => ({ ...prev, ...projectMapUpdate }));
-//       })
-//       .catch((error) => {
-//         console.error("Error fetching projects:", error);
-//       });
-//   }, [userId, role]);
-
-//   const fetchProjectById = async (projectId: string) => {
-//     if (projectMap[projectId]) return; // Skip if already cached
-//     try {
-//       const response = await axios.get(
-//         `http://localhost:5000/api/projects/${projectId}`
-//       );
-//       const project = response.data;
-//       setProjectMap((prev) => ({ ...prev, [project._id]: project.name }));
-//       setProjects((prev) =>
-//         prev.some((p) => p._id === project._id)
-//           ? prev
-//           : [
-//               ...prev,
-//               {
-//                 _id: project._id,
-//                 name: project.name,
-//                 assignedTo: project.assignedTo,
-//               },
-//             ]
-//       );
-//     } catch (error) {
-//       console.error(`Error fetching project ${projectId}:`, error);
-//       setProjectMap((prev) => ({ ...prev, [projectId]: "Unknown" }));
-//     }
-//   };
-
-//   const fetchData = async () => {
-//     try {
-//       setIsLoading(true);
-//       setError(null);
-//       const response = await axios.get(
-//         "http://localhost:5000/api/testcases"
-//       );
-//       const data = response.data;
-
-//       // Filter test cases based on user role and projects
-//       let filteredData = [];
-
-//       if (String(role).toLowerCase() === "superadmin") {
-//         // Superadmin sees all test cases
-//         filteredData = data;
-//       } else if (String(role).toLowerCase() === "admin") {
-//         // Admin sees test cases from projects they created
-//         filteredData = data.filter((testCase) =>
-//           projects.some((project) => project._id === testCase.projectId)
-//         );
-//       } else {
-//         // Other roles see test cases from projects they're assigned to
-//         filteredData = data.filter((testCase) =>
-//           projects.some((project) => project._id === testCase.projectId)
-//         );
-//         console.log(filteredData);
-//       }
-
-//       const projectIds = Array.from(
-//         new Set(filteredData.map((testCase) => testCase.projectId))
-//       );
-
-//       // Fetch project details for all unique projectIds
-//       await Promise.all(projectIds.map(fetchProjectById));
-
-//       const categorized = categorizeTestCases(filteredData);
-//       console.log(categorized);
-
-//       setTestCases(filteredData);
-//       setAllTestCases(filteredData);
-//       setCategorizedTestCases(categorized);
-//     } catch (error) {
-//       console.error("Error fetching test cases:", error);
-//       setError("Failed to fetch test cases. Please try again later.");
-//     } finally {
-//       setIsLoading(false);
-//     }
-//   };
-
-//   const handleUpload = async () => {
-//     if (!uploadFile || !uploadProjectId || !moduleName || !email) {
-//       setUploadError(
-//         "Please select a file, project, enter a module name, and ensure you are logged in"
-//       );
-//       return;
-//     }
-
-//     const formData = new FormData();
-//     formData.append("file", uploadFile);
-//     formData.append("module", moduleName);
-//     formData.append("projectId", uploadProjectId);
-//     formData.append("createdBy", email);
-
-//     try {
-//       setIsUploading(true);
-//       setUploadError(null);
-
-//       const token = sessionStorage.getItem("token"); // or retrieve from your auth context/provider
-//       await axios.post(
-//         "http://localhost:5000/api/testcases/upload",
-//         formData,
-//         {
-//           headers: {
-//             "Content-Type": "multipart/form-data",
-//             ...(token ? { Authorization: `Bearer ${token}` } : {}),
-//           },
-//         }
-//       );
-//       setShowUploadModal(false);
-//       setUploadFile(null);
-//       setUploadProjectId("");
-//       setModuleName("");
-//       fetchData();
-//     } catch (error) {
-//       setUploadError(
-//         error.response?.data?.error || "Failed to upload test cases"
-//       );
-//     } finally {
-//       setIsUploading(false);
-//     }
-//   };
-
-//   useEffect(() => {
-//     fetchData();
-//   }, [email, role, projects]); // Include projects to refetch if assigned projects change
-
-//   useEffect(() => {
-//     if (state?.refetch) {
-//       fetchData();
-//     }
-//   }, [state]);
-
-//   useEffect(() => {
-//     if (isLoading) return;
-
-//     let updatedTestCases;
-//     if (selectedProjectId === "All Projects") {
-//       updatedTestCases = allTestCases;
-//     } else {
-//       updatedTestCases = allTestCases.filter(
-//         (testCase) => testCase.projectId === selectedProjectId
-//       );
-//       // Fetch project details for selectedProjectId if not cached
-//       if (selectedProjectId && !projectMap[selectedProjectId]) {
-//         fetchProjectById(selectedProjectId);
-//       }
-//     }
-//     setTestCases(updatedTestCases);
-//     setCategorizedTestCases(categorizeTestCases(updatedTestCases));
-//   }, [selectedProjectId, allTestCases, isLoading]);
-
-//   const filteredTestCases = testCases?.filter((testCase) =>
-//     testCase?.title?.toLowerCase()?.includes(searchQuery?.toLowerCase())
-//   );
-
-//   return (
-//     <div>
-//       <PageHeader
-//         title="Test Cases"
-//         description="Create and manage test cases for your project"
-//         actions={
-//           <>
-//             {/* <button
-//               type="button"
-//               className="btn btn-outline mr-3 h-8 mt-2"
-//               onClick={fetchData}
-//             >
-//               <RefreshCw className="h-3 w-3 mr-2" />
-//               Refresh
-//             </button> */}
-//             {projects?.length > 0 && (
-//               <div className="pr-5">
-//                 <div className="mt-2 grid grid-cols-1">
-//                   <select
-//                     id="projectId"
-//                     name="projectId"
-//                     className="col-start-1 cursor-pointer row-start-1 w-full appearance-none rounded-md bg-white py-1.5 pl-3 pr-8 text-base text-gray-900 outline outline-1 -outline-offset-1 outline-gray-300 focus:outline focus:outline-2 focus:-outline-offset-2 focus:outline-indigo-600 sm:text-sm/6"
-//                     value={selectedProjectId}
-//                     onChange={(e) => setSelectedProjectId(e.target.value)}
-//                   >
-//                     <option value="All Projects">All Projects</option>
-//                     {projects.map((filteredProject) => (
-//                       <option
-//                         key={filteredProject._id}
-//                         value={filteredProject._id}
-//                       >
-//                         {filteredProject.name}
-//                       </option>
-//                     ))}
-//                   </select>
-//                   <ChevronDownIcon
-//                     aria-hidden="true"
-//                     className="pointer-events-none col-start-1 row-start-1 mr-2 size-5 self-center justify-self-end text-gray-500 sm:size-4"
-//                   />
-//                 </div>
-//               </div>
-//             )}
-//             {!String(role).toLowerCase().includes("admin") && (
-//               <button
-//                 type="button"
-//                 className="btn btn-outline mr-3 h-8 mt-2"
-//                 onClick={() => setShowUploadModal(true)}
-//               >
-//                 <Upload className="h-3 w-3 mr-2" />
-//                 Upload Excel
-//               </button>
-//             )}
-//             {!String(role).toLowerCase().includes("admin") && (
-//               <button
-//                 type="button"
-//                 className="btn btn-primary bg-indigo-900"
-//                 onClick={() => navigate("/test-cases/create")}
-//               >
-//                 <Plus className="h-5 w-5 mr-2" />
-//                 Add Test Case
-//               </button>
-//             )}
-//           </>
-//         }
-//       />
-//       {showUploadModal && (
-//         <div className="fixed inset-0 bg-gray-600 bg-opacity-50 flex items-center justify-center">
-//           <div className="bg-white p-6 rounded-lg shadow-lg w-full max-w-md">
-//             <h3 className="text-lg font-semibold mb-4">Upload Test Cases</h3>
-//             {uploadError && (
-//               <div className="p-2 text-red-600 bg-red-100 rounded-md mb-4">
-//                 {uploadError}
-//               </div>
-//             )}
-//             <div className="mb-4">
-//               <label className="block text-sm font-medium text-gray-700">
-//                 Excel File
-//               </label>
-//               <input
-//                 type="file"
-//                 accept=".xlsx,.xls"
-//                 onChange={(e) => setUploadFile(e.target.files?.[0] || null)}
-//                 className="mt-1 block w-full border border-gray-300 rounded-md p-2"
-//               />
-//             </div>
-//             <div className="mb-4">
-//               <label className="block text-sm font-medium text-gray-700">
-//                 Project
-//               </label>
-//               <select
-//                 value={uploadProjectId}
-//                 onChange={(e) => setUploadProjectId(e.target.value)}
-//                 className="mt-1 block w-full border border-gray-300 rounded-md p-2"
-//               >
-//                 <option value="">Select Project</option>
-//                 {projects.map((project) => (
-//                   <option key={project._id} value={project._id}>
-//                     {project.name}
-//                   </option>
-//                 ))}
-//               </select>
-//             </div>
-//             <div className="mb-4">
-//               <label className="block text-sm font-medium text-gray-700">
-//                 Module Name
-//               </label>
-//               <input
-//                 type="text"
-//                 value={moduleName}
-//                 onChange={(e) => setModuleName(e.target.value)}
-//                 className="mt-1 block w-full border border-gray-300 rounded-md p-2 focus:outline-indigo-700"
-//                 placeholder="Enter module name"
-//               />
-//             </div>
-//             <div className="flex justify-end gap-2">
-//               <button
-//                 disabled={isUploading}
-//                 className="btn btn-outline"
-//                 onClick={() => {
-//                   setShowUploadModal(false);
-//                   setUploadError(null);
-//                   setUploadFile(null);
-//                   setUploadProjectId("");
-//                   setModuleName("");
-//                 }}
-//               >
-//                 Cancel
-//               </button>
-//               <button
-//                 className="btn btn-primary bg-indigo-900"
-//                 onClick={handleUpload}
-//                 disabled={isUploading}
-//               >
-//                 Upload
-//               </button>
-//             </div>
-//           </div>
-//         </div>
-//       )}
-//       {error && (
-//         <div className="p-4 text-red-600 bg-red-100 rounded-md">{error}</div>
-//       )}
-//       {isLoading && (
-//         <div className="p-8 text-center">
-//           <p className="text-gray-500">Loading test cases...</p>
-//         </div>
-//       )}
-//       {!isLoading && (
-//         <div className="flex flex-col md:flex-row gap-6">
-//           <div className="w-full md:w-72 flex-shrink-0">
-//             <div className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
-//               <div className="p-4 py-5 border-b border-gray-200">
-//                 <h3 className="text-lg font-semibold text-gray-900 ">
-//                   Modules
-//                 </h3>
-//               </div>
-//               <div className="p-2">
-//                 {Object.keys(categorizedTestCases).length === 0 ? (
-//                   <div className="w-full flex justify-center">
-//                     <span className="text-sm text-gray-500">No modules.</span>
-//                   </div>
-//                 ) : (
-//                   <ul className="divide-y divide-gray-200 pointer-events-none cursor-not-allowed">
-//                     {Object.keys(categorizedTestCases).map((section) => (
-//                       <li key={section} className="">
-//                         <button
-//                           className={`flex items-center justify-between w-full p-2 text-sm rounded-md cursor-default ${
-//                             selectedSection === section
-//                               ? "bg-primary-50 text-primary-700"
-//                               : "text-gray-700 hover:bg-gray-50"
-//                           }`}
-//                           onClick={() => setSelectedSection(section)}
-//                         >
-//                           <div className="flex items-center max-w-48">
-//                             <Dot className="text-2xl" />
-//                             <span className="truncate">{section}</span>
-//                           </div>
-//                           <span className="text-xs bg-gray-100 text-gray-700 px-2 py-0.5 rounded-full">
-//                             {categorizedTestCases[section].length}
-//                           </span>
-//                         </button>
-//                       </li>
-//                     ))}
-//                   </ul>
-//                 )}
-//               </div>
-//             </div>
-//           </div>
-
-//           <div className="flex-1">
-//             <div className="bg-white rounded-lg shadow-sm border border-gray-200">
-//               {/* <div className="p-4 flex flex-col gap-4 sm:flex-row sm:items-center border-b border-gray-200">
-//                 <div className="relative flex-1 max-w-md">
-//                   <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-//                     <Search className="h-5 w-5 text-gray-400" />
-//                   </div>
-//                   <input
-//                     type="text"
-//                     className="block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-md leading-5 bg-white placeholder-gray-500 focus:outline-none focus:ring-primary-500 focus:border-primary-500 sm:text-sm"
-//                     placeholder="Search test cases"
-//                     value={searchQuery}
-//                     onChange={(e) => setSearchQuery(e.target.value)}
-//                   />
-//                 </div>
-//               </div> */}
-//               <div className="overflow-x-auto">
-//                 <table className="table">
-//                   <thead>
-//                     <tr>
-//                       <th scope="col">ID</th>
-//                       <th scope="col">Title</th>
-//                       <th scope="col">Status</th>
-//                       <th scope="col">Priority</th>
-//                       <th scope="col">Modules</th>
-//                       <th scope="col">Project</th>
-//                       <th scope="col">Last Updated</th>
-//                     </tr>
-//                   </thead>
-//                   <tbody>
-//                     {selectedSection
-//                       ? categorizedTestCases[selectedSection]
-//                           ?.filter((testCase: any) =>
-//                             testCase.title
-//                               .toLowerCase()
-//                               .includes(searchQuery.toLowerCase())
-//                           )
-//                           .map((testCase: any) => (
-//                             <tr key={testCase._id} className="hover:bg-gray-50">
-//                               <td className="font-medium">
-//                                 {testCase.testCaseId}
-//                               </td>
-//                               <td className="max-w-48 truncate">
-//                                 <Link
-//                                   state={testCase}
-//                                   to={`/test-cases/${testCase.testCaseId}`}
-//                                   className="text-primary-600 hover:text-primary-900 font-medium"
-//                                 >
-//                                   {testCase.title}
-//                                 </Link>
-//                               </td>
-//                               <td>
-//                                 <StatusBadge
-//                                   status={testCase.status}
-//                                   size="sm"
-//                                 />
-//                               </td>
-//                               <td>
-//                                 <span
-//                                   className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
-//                                     testCase.priority === "High"
-//                                       ? "bg-danger-100 text-danger-800"
-//                                       : testCase.priority === "Medium"
-//                                       ? "bg-warning-100 text-warning-800"
-//                                       : "bg-gray-100 text-gray-800"
-//                                   }`}
-//                                 >
-//                                   {testCase.priority}
-//                                 </span>
-//                               </td>
-//                               <td className="text-gray-600 truncate max-w-48">
-//                                 {testCase.module}
-//                               </td>
-//                               <td className="text-gray-600 truncate max-w-48">
-//                                 {projectMap[testCase.projectId] || "Loading..."}
-//                               </td>
-//                               <td className="text-gray-600">
-//                                 {testCase.updatedAt.slice(0, 10)}
-//                               </td>
-//                             </tr>
-//                           )) || (
-//                           <tr>
-//                             <td
-//                               colSpan={7}
-//                               className="text-center text-gray-500"
-//                             >
-//                               No test cases found for this module.
-//                             </td>
-//                           </tr>
-//                         )
-//                       : filteredTestCases.map((testCase: any) => (
-//                           <tr key={testCase._id} className="hover:bg-gray-50">
-//                             <td className="font-medium">
-//                               {testCase.testCaseId}
-//                             </td>
-//                             <td className="max-w-48 truncate">
-//                               <Link
-//                                 state={testCase}
-//                                 to={`/test-cases/${testCase.testCaseId}`}
-//                                 className="text-primary-600 hover:text-primary-900 font-medium"
-//                               >
-//                                 {testCase.title}
-//                               </Link>
-//                             </td>
-//                             <td>
-//                               <StatusBadge status={testCase.status} size="sm" />
-//                             </td>
-//                             <td>
-//                               <span
-//                                 className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
-//                                   testCase.priority === "High"
-//                                     ? "bg-danger-100 text-danger-800"
-//                                     : testCase.priority === "Medium"
-//                                     ? "bg-warning-100 text-warning-800"
-//                                     : "bg-gray-100 text-gray-800"
-//                                 }`}
-//                               >
-//                                 {testCase.priority}
-//                               </span>
-//                             </td>
-//                             <td className="text-gray-600 truncate max-w-48">
-//                               {testCase.module}
-//                             </td>
-//                             <td className="text-gray-600 truncate max-w-48">
-//                               {projectMap[testCase.projectId] || "Loading..."}
-//                             </td>
-//                             <td className="text-gray-600 min-w-32">
-//                               {format(
-//                                 new Date(testCase?.updatedAt),
-//                                 "MMMM dd, yyyy"
-//                               )}
-//                             </td>
-//                           </tr>
-//                         ))}
-//                   </tbody>
-//                 </table>
-//               </div>
-//               {filteredTestCases.length === 0 && !selectedSection && (
-//                 <div className="p-8 text-center">
-//                   <p className="text-gray-500">
-//                     No test cases found matching your criteria.
-//                   </p>
-//                 </div>
-//               )}
-//             </div>
-//           </div>
-//         </div>
-//       )}
-//     </div>
-//   );
-// };
-
-// export default TestCases;
-
 import React, { useEffect, useState } from "react";
 import { Link, useNavigate, useLocation } from "react-router-dom";
 import PageHeader from "../components/common/PageHeader";
-import {
-  Plus,
-  ChevronDownIcon,
-  Dot,
-  Search,
-  RefreshCw,
-  Upload,
-} from "lucide-react";
+import { Plus, ChevronDownIcon, Dot, Upload } from "lucide-react";
 import StatusBadge from "../components/common/StatusBadge";
 import axios from "axios";
 import { format } from "date-fns";
+import { API_URL } from "../config";
 
 const TestCases: React.FC = () => {
   const [selectedSection, setSelectedSection] = useState<string | null>(null);
   const [testCases, setTestCases] = useState<any[]>([]);
   const [categorizedTestCases, setCategorizedTestCases] = useState<any>({});
-  const [filteredModules, setFileteredModules] = useState<any>({});
   const [projects, setProjects] = useState<any[]>([]);
   const [projectMap, setProjectMap] = useState<Record<string, string>>({});
   const [selectedProjectId, setSelectedProjectId] = useState("All Projects");
@@ -645,7 +46,7 @@ const TestCases: React.FC = () => {
 
   useEffect(() => {
     axios
-      .get("http://localhost:5000/api/projects")
+      .get(`${API_URL}/projects`)
       .then((response) => {
         setAllProjects(response.data);
 
@@ -654,14 +55,11 @@ const TestCases: React.FC = () => {
         if (String(role).toLowerCase() === "superadmin") {
           userProjects = response.data;
         } else if (String(role).toLowerCase() === "admin") {
-          userProjects = response.data.filter(
-            (project) => project.createdBy?._id === userId
-          );
+          userProjects = response.data.filter((project) => project.createdBy?._id === userId);
         } else {
           userProjects = response.data.filter(
             (project) =>
-              Array.isArray(project.assignedTo) &&
-              project.assignedTo.some((assignee) => assignee._id === userId)
+              Array.isArray(project.assignedTo) && project.assignedTo.some((assignee) => assignee._id === userId)
           );
         }
 
@@ -687,9 +85,7 @@ const TestCases: React.FC = () => {
   const fetchProjectById = async (projectId: string) => {
     if (projectMap[projectId]) return;
     try {
-      const response = await axios.get(
-        `http://localhost:5000/api/projects/${projectId}`
-      );
+      const response = await axios.get(`${API_URL}/projects/${projectId}`);
       const project = response.data;
       setProjectMap((prev) => ({ ...prev, [project._id]: project.name }));
       setProjects((prev) =>
@@ -714,7 +110,7 @@ const TestCases: React.FC = () => {
     try {
       setIsLoading(true);
       setError(null);
-      const response = await axios.get("http://localhost:5000/api/testcases");
+      const response = await axios.get(`${API_URL}/testcases`);
       const data = response.data;
 
       let filteredData = [];
@@ -722,24 +118,16 @@ const TestCases: React.FC = () => {
       if (String(role).toLowerCase() === "superadmin") {
         filteredData = data;
       } else if (String(role).toLowerCase() === "admin") {
-        filteredData = data.filter((testCase) =>
-          projects.some((project) => project._id === testCase.projectId)
-        );
+        filteredData = data.filter((testCase) => projects.some((project) => project._id === testCase.projectId));
       } else {
-        filteredData = data.filter((testCase) =>
-          projects.some((project) => project._id === testCase.projectId)
-        );
-        console.log(filteredData);
+        filteredData = data.filter((testCase) => projects.some((project) => project._id === testCase.projectId));
       }
 
-      const projectIds = Array.from(
-        new Set(filteredData.map((testCase) => testCase.projectId))
-      );
+      const projectIds = Array.from(new Set(filteredData.map((testCase) => testCase.projectId)));
 
       await Promise.all(projectIds.map(fetchProjectById));
 
       const categorized = categorizeTestCases(filteredData);
-      console.log(categorized);
 
       setTestCases(filteredData);
       setAllTestCases(filteredData);
@@ -754,9 +142,7 @@ const TestCases: React.FC = () => {
 
   const handleUpload = async () => {
     if (!uploadFile || !uploadProjectId || !moduleName || !email) {
-      setUploadError(
-        "Please select a file, project, enter a module name, and ensure you are logged in"
-      );
+      setUploadError("Please select a file, project, enter a module name, and ensure you are logged in");
       return;
     }
 
@@ -771,7 +157,7 @@ const TestCases: React.FC = () => {
       setUploadError(null);
 
       const token = sessionStorage.getItem("token");
-      await axios.post("http://localhost:5000/api/testcases/upload", formData, {
+      await axios.post(`${API_URL}/testcases/upload`, formData, {
         headers: {
           "Content-Type": "multipart/form-data",
           ...(token ? { Authorization: `Bearer ${token}` } : {}),
@@ -783,9 +169,7 @@ const TestCases: React.FC = () => {
       setModuleName("");
       fetchData();
     } catch (error) {
-      setUploadError(
-        error.response?.data?.error || "Failed to upload test cases"
-      );
+      setUploadError(error.response?.data?.error || "Failed to upload test cases");
     } finally {
       setIsUploading(false);
     }
@@ -808,9 +192,7 @@ const TestCases: React.FC = () => {
     if (selectedProjectId === "All Projects") {
       updatedTestCases = allTestCases;
     } else {
-      updatedTestCases = allTestCases.filter(
-        (testCase) => testCase.projectId === selectedProjectId
-      );
+      updatedTestCases = allTestCases.filter((testCase) => testCase.projectId === selectedProjectId);
       if (selectedProjectId && !projectMap[selectedProjectId]) {
         fetchProjectById(selectedProjectId);
       }
@@ -842,10 +224,7 @@ const TestCases: React.FC = () => {
                   >
                     <option value="All Projects">All Projects</option>
                     {projects.map((filteredProject) => (
-                      <option
-                        key={filteredProject._id}
-                        value={filteredProject._id}
-                      >
+                      <option key={filteredProject._id} value={filteredProject._id}>
                         {filteredProject.name}
                       </option>
                     ))}
@@ -858,11 +237,7 @@ const TestCases: React.FC = () => {
               </div>
             )}
             {!String(role).toLowerCase().includes("admin") && (
-              <button
-                type="button"
-                className="btn btn-outline mr-3 h-8 mt-2"
-                onClick={() => setShowUploadModal(true)}
-              >
+              <button type="button" className="btn btn-outline mr-3 h-8 mt-2" onClick={() => setShowUploadModal(true)}>
                 <Upload className="h-3 w-3 mr-2" />
                 Upload Excel
               </button>
@@ -884,15 +259,9 @@ const TestCases: React.FC = () => {
         <div className="fixed inset-0 bg-gray-600 bg-opacity-50 flex items-center justify-center">
           <div className="bg-white p-6 rounded-lg shadow-lg w-full max-w-md">
             <h3 className="text-lg font-semibold mb-4">Upload Test Cases</h3>
-            {uploadError && (
-              <div className="p-2 text-red-600 bg-red-100 rounded-md mb-4">
-                {uploadError}
-              </div>
-            )}
+            {uploadError && <div className="p-2 text-red-600 bg-red-100 rounded-md mb-4">{uploadError}</div>}
             <div className="mb-4">
-              <label className="block text-sm font-medium text-gray-700">
-                Excel File
-              </label>
+              <label className="block text-sm font-medium text-gray-700">Excel File</label>
               <input
                 type="file"
                 accept=".xlsx,.xls"
@@ -903,16 +272,10 @@ const TestCases: React.FC = () => {
                 }}
                 className="mt-1 block w-full border border-gray-300 rounded-md p-2"
               />
-              {uploadFile && (
-                <p className="mt-1 text-sm text-gray-600">
-                  Selected: {uploadFile.name}
-                </p>
-              )}
+              {uploadFile && <p className="mt-1 text-sm text-gray-600">Selected: {uploadFile.name}</p>}
             </div>
             <div className="mb-4">
-              <label className="block text-sm font-medium text-gray-700">
-                Project
-              </label>
+              <label className="block text-sm font-medium text-gray-700">Project</label>
               <select
                 value={uploadProjectId}
                 onChange={(e) => setUploadProjectId(e.target.value)}
@@ -927,9 +290,7 @@ const TestCases: React.FC = () => {
               </select>
             </div>
             <div className="mb-4">
-              <label className="block text-sm font-medium text-gray-700">
-                Module Name
-              </label>
+              <label className="block text-sm font-medium text-gray-700">Module Name</label>
               <input
                 type="text"
                 value={moduleName}
@@ -952,20 +313,14 @@ const TestCases: React.FC = () => {
               >
                 Cancel
               </button>
-              <button
-                className="btn btn-primary bg-indigo-900"
-                onClick={handleUpload}
-                disabled={isUploading}
-              >
+              <button className="btn btn-primary bg-indigo-900" onClick={handleUpload} disabled={isUploading}>
                 Upload
               </button>
             </div>
           </div>
         </div>
       )}
-      {error && (
-        <div className="p-4 text-red-600 bg-red-100 rounded-md">{error}</div>
-      )}
+      {error && <div className="p-4 text-red-600 bg-red-100 rounded-md">{error}</div>}
       {isLoading && (
         <div className="p-8 text-center">
           <p className="text-gray-500">Loading test cases...</p>
@@ -976,9 +331,7 @@ const TestCases: React.FC = () => {
           <div className="w-full md:w-72 flex-shrink-0">
             <div className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
               <div className="p-4 py-5 border-b border-gray-200">
-                <h3 className="text-lg font-semibold text-gray-900 ">
-                  Modules
-                </h3>
+                <h3 className="text-lg font-semibold text-gray-900 ">Modules</h3>
               </div>
               <div className="p-2">
                 {Object.keys(categorizedTestCases).length === 0 ? (
@@ -1031,16 +384,10 @@ const TestCases: React.FC = () => {
                   <tbody>
                     {selectedSection
                       ? categorizedTestCases[selectedSection]
-                          ?.filter((testCase: any) =>
-                            testCase.title
-                              .toLowerCase()
-                              .includes(searchQuery.toLowerCase())
-                          )
+                          ?.filter((testCase: any) => testCase.title.toLowerCase().includes(searchQuery.toLowerCase()))
                           .map((testCase: any) => (
                             <tr key={testCase._id} className="hover:bg-gray-50">
-                              <td className="font-medium">
-                                {testCase.testCaseId}
-                              </td>
+                              <td className="font-medium">{testCase.testCaseId}</td>
                               <td className="max-w-48 truncate">
                                 <Link
                                   state={testCase}
@@ -1051,10 +398,7 @@ const TestCases: React.FC = () => {
                                 </Link>
                               </td>
                               <td>
-                                <StatusBadge
-                                  status={testCase.status}
-                                  size="sm"
-                                />
+                                <StatusBadge status={testCase.status} size="sm" />
                               </td>
                               <td>
                                 <span
@@ -1069,31 +413,22 @@ const TestCases: React.FC = () => {
                                   {testCase.priority}
                                 </span>
                               </td>
-                              <td className="text-gray-600 truncate max-w-48">
-                                {testCase.module}
-                              </td>
+                              <td className="text-gray-600 truncate max-w-48">{testCase.module}</td>
                               <td className="text-gray-600 truncate max-w-48">
                                 {projectMap[testCase.projectId] || "Loading..."}
                               </td>
-                              <td className="text-gray-600">
-                                {testCase.updatedAt.slice(0, 10)}
-                              </td>
+                              <td className="text-gray-600">{testCase.updatedAt.slice(0, 10)}</td>
                             </tr>
                           )) || (
                           <tr>
-                            <td
-                              colSpan={7}
-                              className="text-center text-gray-500"
-                            >
+                            <td colSpan={7} className="text-center text-gray-500">
                               No test cases found for this module.
                             </td>
                           </tr>
                         )
                       : filteredTestCases.map((testCase: any) => (
                           <tr key={testCase._id} className="hover:bg-gray-50">
-                            <td className="font-medium">
-                              {testCase.testCaseId}
-                            </td>
+                            <td className="font-medium">{testCase.testCaseId}</td>
                             <td className="max-w-48 truncate">
                               <Link
                                 state={testCase}
@@ -1119,17 +454,12 @@ const TestCases: React.FC = () => {
                                 {testCase.priority}
                               </span>
                             </td>
-                            <td className="text-gray-600 truncate max-w-48">
-                              {testCase.module}
-                            </td>
+                            <td className="text-gray-600 truncate max-w-48">{testCase.module}</td>
                             <td className="text-gray-600 truncate max-w-48">
                               {projectMap[testCase.projectId] || "Loading..."}
                             </td>
                             <td className="text-gray-600 min-w-32">
-                              {format(
-                                new Date(testCase?.updatedAt),
-                                "MMMM dd, yyyy"
-                              )}
+                              {format(new Date(testCase?.updatedAt), "MMMM dd, yyyy")}
                             </td>
                           </tr>
                         ))}
@@ -1138,9 +468,7 @@ const TestCases: React.FC = () => {
               </div>
               {filteredTestCases.length === 0 && !selectedSection && (
                 <div className="p-8 text-center">
-                  <p className="text-gray-500">
-                    No test cases found matching your criteria.
-                  </p>
+                  <p className="text-gray-500">No test cases found matching your criteria.</p>
                 </div>
               )}
             </div>

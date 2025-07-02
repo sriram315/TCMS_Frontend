@@ -5,6 +5,7 @@ import { CheckCircle, XCircle, AlertTriangle, MinusCircle } from "lucide-react";
 import StatusBadge, { TestStatus } from "../../common/StatusBadge";
 import PageHeader from "../../common/PageHeader";
 import { format } from "date-fns";
+import { API_URL } from "../../../config";
 const TestPlanRunsDetail: React.FC = () => {
   const location = useLocation();
   const testPlanId = location.state?.testPlanId || "";
@@ -19,7 +20,7 @@ const TestPlanRunsDetail: React.FC = () => {
 
   useEffect(() => {
     axios
-      .get("http://localhost:5000/api/users")
+      .get(`${API_URL}/users`)
       .then((response) => {
         const usersData = response.data.data.users;
         const filteredUsers = usersData
@@ -38,17 +39,11 @@ const TestPlanRunsDetail: React.FC = () => {
   useEffect(() => {
     const fetchTestRuns = async () => {
       try {
-        const response = await axios.get(
-          `http://localhost:5000/api/test-plan/testPlanRun/${testPlanId}`
-        );
+        const response = await axios.get(`${API_URL}/test-plan/testPlanRun/${testPlanId}`);
         const testRunsData = response.data.data;
         // setData(testRunsData.filter((module) => module._id === testRunId)[0]);
-        const testRun = testRunsData.filter(
-          (module) => module._id === testRunId
-        )[0];
-        const assignee = users.find(
-          (user) => String(user._id) == testRun.assignedTo
-        );
+        const testRun = testRunsData.filter((module) => module._id === testRunId)[0];
+        const assignee = users.find((user) => String(user._id) == testRun.assignedTo);
 
         setData({
           ...testRun,
@@ -79,24 +74,16 @@ const TestPlanRunsDetail: React.FC = () => {
       total: 0,
     }
   );
-  console.log(statusCounts);
 
   // Calculate percentage of completion (e.g. passed + failed + blocked)
-  const completed =
-    statusCounts?.passed + statusCounts?.failed + statusCounts?.blocked;
-  const percentageCompleted =
-    statusCounts?.total > 0
-      ? Math.trunc((completed / statusCounts?.total) * 100)
-      : "0";
+  const completed = statusCounts?.passed + statusCounts?.failed + statusCounts?.blocked;
+  const percentageCompleted = statusCounts?.total > 0 ? Math.trunc((completed / statusCounts?.total) * 100) : "0";
 
   // Derive runStatus
   let runStatus = "Not Started";
   if (statusCounts?.untested === 0 && statusCounts?.total > 0) {
     runStatus = "Completed";
-  } else if (
-    completed === 0 &&
-    statusCounts?.untested === statusCounts?.total
-  ) {
+  } else if (completed === 0 && statusCounts?.untested === statusCounts?.total) {
     runStatus = "Not Started";
   } else if (completed > 0 && statusCounts?.untested > 0) {
     runStatus = "In Progress";
@@ -112,33 +99,7 @@ const TestPlanRunsDetail: React.FC = () => {
 
   return (
     <div>
-      {/* <Breadcrumbs
-        items={[
-          { label: "Test Plan Runs", path: `/test-plans/${testPlanId}` },
-          { label: "Test Run", path: `/test-plans/test-runs/${testRunId}` },
-          { label: data.name },
-        ]}
-      /> */}
-
-      <PageHeader
-        title={data.name}
-        description={data.description}
-        actions={
-          <div className="flex">
-            {/* <button type="button" className="btn btn-outline mr-2">
-              <Edit className="h-4 w-4 mr-1" />
-              Edit
-            </button>
-
-            <div className="relative ml-2">
-              <button type="button" className="btn btn-outline">
-                <span className="sr-only">More options</span>
-                <MoreHorizontal className="h-5 w-5" />
-              </button>
-            </div> */}
-          </div>
-        }
-      />
+      <PageHeader title={data.name} description={data.description} actions={<div className="flex"></div>} />
 
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-3 mb-6">
         <div className="lg:col-span-2">
@@ -147,9 +108,7 @@ const TestPlanRunsDetail: React.FC = () => {
               <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-6">
                 <div>
                   <div className="flex items-center">
-                    <h3 className="text-lg font-medium text-gray-900 mr-3">
-                      Progress
-                    </h3>
+                    <h3 className="text-lg font-medium text-gray-900 mr-3">Progress</h3>
                     <span
                       className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-primary-100 text-primary-800 border border-primary-200`}
                     >
@@ -161,56 +120,41 @@ const TestPlanRunsDetail: React.FC = () => {
                   </div>
                 </div>
                 <div className="mt-4 sm:mt-0">
-                  <span className="text-xl font-semibold text-gray-900">
-                    {percentageCompleted}%
-                  </span>
+                  <span className="text-xl font-semibold text-gray-900">{percentageCompleted}%</span>
                 </div>
               </div>
 
               <div className="w-full bg-gray-200 rounded-full h-2.5 mb-6">
-                <div
-                  className="bg-primary-600 h-2.5 rounded-full"
-                  style={{ width: `${percentageCompleted}%` }}
-                ></div>
+                <div className="bg-primary-600 h-2.5 rounded-full" style={{ width: `${percentageCompleted}%` }}></div>
               </div>
 
               <div className="grid grid-cols-2 sm:grid-cols-5 gap-4">
                 <div className="flex flex-col items-center p-3 bg-success-50 rounded-lg">
                   <CheckCircle className="h-6 w-6 text-success-500 mb-1" />
-                  <span className="text-lg font-semibold text-gray-900">
-                    {statusCounts?.passed}
-                  </span>
+                  <span className="text-lg font-semibold text-gray-900">{statusCounts?.passed}</span>
                   <span className="text-sm text-gray-500">Passed</span>
                 </div>
 
                 <div className="flex flex-col items-center p-3 bg-danger-50 rounded-lg">
                   <XCircle className="h-6 w-6 text-danger-500 mb-1" />
-                  <span className="text-lg font-semibold text-gray-900">
-                    {statusCounts?.failed}
-                  </span>
+                  <span className="text-lg font-semibold text-gray-900">{statusCounts?.failed}</span>
                   <span className="text-sm text-gray-500">Failed</span>
                 </div>
 
                 <div className="flex flex-col items-center p-3 bg-warning-50 rounded-lg">
                   <AlertTriangle className="h-6 w-6 text-warning-500 mb-1" />
-                  <span className="text-lg font-semibold text-gray-900">
-                    {statusCounts?.blocked}
-                  </span>
+                  <span className="text-lg font-semibold text-gray-900">{statusCounts?.blocked}</span>
                   <span className="text-sm text-gray-500">Blocked</span>
                 </div>
 
                 <div className="flex flex-col items-center p-3 bg-gray-50 rounded-lg">
                   <MinusCircle className="h-6 w-6 text-gray-500 mb-1" />
-                  <span className="text-lg font-semibold text-gray-900">
-                    {statusCounts?.untested}
-                  </span>
+                  <span className="text-lg font-semibold text-gray-900">{statusCounts?.untested}</span>
                   <span className="text-sm text-gray-500">Untested</span>
                 </div>
 
                 <div className="flex flex-col items-center justify-center p-3 bg-gray-100 rounded-lg">
-                  <span className="text-lg font-semibold text-gray-900">
-                    {statusCounts?.total}
-                  </span>
+                  <span className="text-lg font-semibold text-gray-900">{statusCounts?.total}</span>
                   <span className="text-sm text-gray-500">Total</span>
                 </div>
               </div>
@@ -221,9 +165,7 @@ const TestPlanRunsDetail: React.FC = () => {
         <div>
           <div className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden h-full">
             <div className="p-6">
-              <h3 className="text-lg font-medium text-gray-900 mb-4">
-                Details
-              </h3>
+              <h3 className="text-lg font-medium text-gray-900 mb-4">Details</h3>
 
               <dl className="grid grid-cols-[100px_1fr] gap-3 text-sm mb-5">
                 <dt className="font-medium text-gray-500">Assigned to:</dt>
@@ -237,23 +179,13 @@ const TestPlanRunsDetail: React.FC = () => {
                 </dd>
 
                 <dt className="font-medium text-gray-500">Due date from:</dt>
-                <dd className="text-gray-900">
-                  {format(new Date(dueDateFrom), "MMMM dd, yyyy")}
-                </dd>
+                <dd className="text-gray-900">{format(new Date(dueDateFrom), "MMMM dd, yyyy")}</dd>
 
                 <dt className="font-medium text-gray-500">Due date to:</dt>
-                <dd className="text-gray-900">
-                  {" "}
-                  {format(new Date(dueDateTo), "MMMM dd, yyyy")}
-                </dd>
+                <dd className="text-gray-900"> {format(new Date(dueDateTo), "MMMM dd, yyyy")}</dd>
               </dl>
 
-              <div className="border-t border-gray-200 pt-4">
-                {/* <h4 className="text-sm font-medium text-gray-900 mb-2">
-                  Description
-                </h4> */}
-                {/* <p className="text-sm text-gray-700">{description}</p> */}
-              </div>
+              <div className="border-t border-gray-200 pt-4"></div>
             </div>
           </div>
         </div>
@@ -270,25 +202,20 @@ const TestPlanRunsDetail: React.FC = () => {
                 <th scope="col">Title</th>
                 <th scope="col">Status</th>
                 <th scope="col">Module</th>
-                {/* <th scope="col">Defects</th>
-                <th scope="col" className="w-12"></th> */}
               </tr>
             </thead>
             <tbody>
               {data?.module?.map((testCase) => (
                 <tr key={testCase._id} className="hover:bg-gray-50">
-                  <td className="font-medium whitespace-nowrap">
-                    {testCase.testCaseId}
-                  </td>
+                  <td className="font-medium whitespace-nowrap">{testCase.testCaseId}</td>
                   <td>
                     <Link
                       state={{
                         ...testCase,
                         isTestPlan: true,
-                        url: `http://localhost:5000/api/test-plan/${testPlanId}/${testRunId}/${testCase._id}`,
+                        url: `${API_URL}/test-plan/${testPlanId}/${testRunId}/${testCase._id}`,
                       }}
                       to={`/test-plans/test-runs/test-detail/${testCase.testCaseId}`}
-                      onClick={() => console.log("Navigating with state")}
                       className="text-primary-600 hover:text-primary-900 font-medium"
                     >
                       {testCase.title}
@@ -301,35 +228,10 @@ const TestPlanRunsDetail: React.FC = () => {
                       size="sm"
                       edit={true}
                       onClick={handleStatusChange}
-                      url={`http://localhost:5000/api/test-plan/${testPlanId}/${testRunId}/${testCase._id}`}
+                      url={`${API_URL}/test-plan/${testPlanId}/${testRunId}/${testCase._id}`}
                     />
                   </td>
                   <td className="text-gray-600">{testCase.module}</td>
-                  {/* <td>
-                    {testCase.defects.length > 0 ? (
-                      <div className="flex flex-wrap gap-1">
-                        {testCase.defects.map((defect, index) => (
-                          <span
-                            key={index}
-                            className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-danger-100 text-danger-800"
-                          >
-                            {defect}
-                          </span>
-                        ))}
-                      </div>
-                    ) : (
-                      <span className="text-sm text-gray-400">None</span>
-                    )}
-                  </td> */}
-                  {/* <td>
-                    <button
-                      type="button"
-                      className="text-gray-400 hover:text-gray-600"
-                      aria-label="More options"
-                    >
-                      <MoreHorizontal className="h-5 w-5" />
-                    </button>
-                  </td> */}
                 </tr>
               ))}
             </tbody>
@@ -338,9 +240,7 @@ const TestPlanRunsDetail: React.FC = () => {
 
         {data?.testCases?.length === 0 && (
           <div className="p-8 text-center">
-            <p className="text-gray-500">
-              No test cases found matching your criteria.
-            </p>
+            <p className="text-gray-500">No test cases found matching your criteria.</p>
           </div>
         )}
       </div>

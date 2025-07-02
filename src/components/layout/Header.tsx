@@ -44,10 +44,6 @@ const Header: React.FC<HeaderProps> = ({ openSidebar }) => {
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
-  // const toggleNotifications = () => {
-  //   setNotificationsOpen(!notificationsOpen);
-  //   if (profileOpen) setProfileOpen(false);
-  // };
 
   return (
     <>
@@ -72,39 +68,6 @@ const Header: React.FC<HeaderProps> = ({ openSidebar }) => {
             </div>
 
             <div className="flex items-center">
-              {/* <div className="flex-shrink-0">
-              <button 
-                type="button" 
-                className="btn btn-primary btn-sm"
-              >
-                + New Test Run
-              </button>
-            </div> */}
-
-              {/* <div className="ml-4 relative">
-              <button
-                type="button"
-                className="p-1 rounded-full text-gray-500 hover:text-gray-700 focus:outline-none focus:ring-2 focus:ring-primary-500"
-                onClick={toggleNotifications}
-              >
-                <span className="sr-only">View notifications</span>
-                <Bell className="h-6 w-6" />
-              </button>
-              
-              {notificationsOpen && (
-                <div className="dropdown animate-fade-in">
-                  <div className="py-1" role="menu" aria-orientation="vertical">
-                    <div className="px-4 py-2 text-sm text-gray-700 border-b border-gray-200">
-                      <strong>Notifications</strong>
-                    </div>
-                    <div className="px-4 py-3 text-sm text-gray-500">
-                      No new notifications
-                    </div>
-                  </div>
-                </div>
-              )}
-            </div> */}
-
               <div className="ml-4 relative" ref={dropdownRef}>
                 <button
                   type="button"
@@ -112,11 +75,6 @@ const Header: React.FC<HeaderProps> = ({ openSidebar }) => {
                   onClick={toggleProfile}
                 >
                   <span className="sr-only">Open user menu</span>
-                  {/* <img 
-                  className="h-8 w-8 rounded-full" 
-                  src={user?.avatar} 
-                  alt={user?.name} 
-                /> */}
                   <span className="hidden md:flex md:items-center ml-2">
                     <span className="text-sm font-medium text-gray-700">
                       {user?.name}
@@ -197,4 +155,4 @@ const Header: React.FC<HeaderProps> = ({ openSidebar }) => {
   );
 };
 
-export default Header;
+export default React.memo(Header);

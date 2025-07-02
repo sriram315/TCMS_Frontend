@@ -4,9 +4,9 @@ import {
   XCircle,
   AlertTriangle,
   MinusCircle,
-  RotateCcw,
 } from "lucide-react";
 import axios from "axios";
+import { API_URL } from "../../config";
 
 export type TestStatus =
   | "passed"
@@ -19,6 +19,9 @@ interface StatusBadgeProps {
   status: TestStatus;
   size?: "sm" | "md";
   testCaseId: string; // Pass test case ID for the API call
+  edit?: boolean;
+  onClick?: (arg: any) => void;
+  url?: string;
 }
 
 const STATUS_OPTIONS: Record<
@@ -49,6 +52,11 @@ const STATUS_OPTIONS: Record<
     className: "status-badge-untested text-gray-400",
     text: "Untested",
   },
+  retest: {
+    icon: "symbol",
+    className: "",
+    text: ""
+  }
 };
 
 const StatusBadge: React.FC<StatusBadgeProps> = ({
@@ -65,7 +73,7 @@ const StatusBadge: React.FC<StatusBadgeProps> = ({
   const [currentStatus, setCurrentStatus] = useState<TestStatus>(initialStatus);
   const [editing, setEditing] = useState(false);
   const token = sessionStorage.getItem("token") || ""; // Replace with your actual token retrieval method
-  const user = JSON.parse(sessionStorage.getItem("user"));
+  const user = JSON.parse(sessionStorage.getItem("user") || "{}");
 
   const handleStatusChange = async (
     e: React.ChangeEvent<HTMLSelectElement>
@@ -78,7 +86,7 @@ const StatusBadge: React.FC<StatusBadgeProps> = ({
       // Replace with your actual endpoint
       const response = await axios.put(
         url.length === 0
-          ? `http://localhost:5000/api/testcases/${testCaseId}`
+          ? `${API_URL}/testcases/${testCaseId}`
           : url,
         {
           status: newStatus,
@@ -133,4 +141,4 @@ const StatusBadge: React.FC<StatusBadgeProps> = ({
   );
 };
 
-export default StatusBadge;
+export default React.memo(StatusBadge);
