@@ -4,11 +4,11 @@ pipeline {
     environment {
         AWS_ACCOUNT_ID = "677043464437"
         AWS_DEFAULT_REGION = "ap-south-1"
-        IMAGE_REPO_NAME = "hunter"
+        IMAGE_REPO_NAME = "tcms"
         IMAGE_TAG = "latest"
         REPOSITORY_URI = "${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_DEFAULT_REGION}.amazonaws.com/${IMAGE_REPO_NAME}"
         AWS_ECR_URL = "${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_DEFAULT_REGION}.amazonaws.com"
-        EKS_CLUSTER_NAME = "hunter-eks"
+        EKS_CLUSTER_NAME = "tcms-eks"
         EC2_IP = "your.ec2.public.ip" // replace this
     }
 
@@ -58,7 +58,7 @@ pipeline {
                         withCredentials([[ $class: 'AmazonWebServicesCredentialsBinding', credentialsId: 'aws-creds-id' ]]) {
                             sh """
                                 aws eks update-kubeconfig --region ${AWS_DEFAULT_REGION} --name ${EKS_CLUSTER_NAME}
-                                kubectl scale deployment hunter-frontend-app-deployment --replicas=0 -n hunter || true
+                                kubectl scale deployment tcms-frontend-app-deployment --replicas=0 -n hunter || true
                             """
                         }
 
