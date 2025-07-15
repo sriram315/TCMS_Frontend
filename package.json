@@ -1,11 +1,12 @@
 {
-  "name": "Testcase Management",
+  "name": "testrail-clone",
   "private": true,
   "version": "0.1.0",
   "type": "module",
   "scripts": {
     "dev": "vite --host",
-    "build": "vite build",
+    "build": "tsc && vite build",
+    "start": "vite preview",
     "lint": "eslint .",
     "preview": "vite preview"
   },
