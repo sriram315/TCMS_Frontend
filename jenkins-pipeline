@@ -75,7 +75,7 @@ ENDSSH
 """
 
 
-                    } } else if (params.MODE == 'EKS') {
+                    }  else if (params.MODE == 'EKS') {
     echo "▶️ Deploying to EKS..."
 
     // Stop & remove container from EC2
