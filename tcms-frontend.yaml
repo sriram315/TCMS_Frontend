@@ -2,7 +2,7 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: tcms-frontend-app-deployment
-  namespace: hunter
+  namespace: tcms
   labels:
     app.kubernetes.io/name: tcms-frontend-app
 spec:
@@ -17,7 +17,7 @@ spec:
     spec:
       # serviceAccountName: deployment-manager-sa
       containers:
-      - name: hunter-frontend-container
+      - name: tcms-frontend-container
         image: 677043464437.dkr.ecr.ap-south-1.amazonaws.com/tcms:latest
         imagePullPolicy: Always
         ports:
@@ -26,7 +26,7 @@ spec:
 apiVersion: v1
 kind: Service
 metadata:
-  namespace: hunter
+  namespace: tcms
   name: tcms-frontend-app-service
 spec:
   ports:
