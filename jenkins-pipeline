@@ -75,24 +75,28 @@ ENDSSH
 """
 
 
-                    } else if (params.MODE == 'EKS') {
-                        echo "▶️ Deploying to EKS..."
+                    } } else if (params.MODE == 'EKS') {
+    echo "▶️ Deploying to EKS..."
 
-                        withCredentials([[ $class: 'AmazonWebServicesCredentialsBinding', credentialsId: 'aws-creds-id' ]]) {
-                            sh """
-                                aws eks update-kubeconfig --region ${AWS_DEFAULT_REGION} --name ${EKS_CLUSTER_NAME}
+    // Stop & remove container from EC2
+    sh """
+    ssh -o StrictHostKeyChecking=no -i /var/lib/jenkins/key.pem ubuntu@${EC2_IP} << 'ENDSSH'
+        docker stop frontend || true
+        docker rm frontend || true
+    ENDSSH
+    """
 
-                                # Ensure namespace exists
-                                kubectl get namespace ${K8S_NAMESPACE} || kubectl create namespace ${K8S_NAMESPACE}
-
-                                # Apply Kubernetes manifest
-                                kubectl apply -f tcms-frontend.yaml -n ${K8S_NAMESPACE}
-
-                                # Scale up deployment
-                                kubectl scale deployment tcms-frontend-app-deployment --replicas=2 -n ${K8S_NAMESPACE}
-                            """
-                        }
-                    } else {
+    // Proceed with EKS deployment
+    withCredentials([[ $class: 'AmazonWebServicesCredentialsBinding', credentialsId: 'aws-creds-id' ]]) {
+        sh """
+            aws eks update-kubeconfig --region ${AWS_DEFAULT_REGION} --name ${EKS_CLUSTER_NAME}
+            kubectl get namespace ${K8S_NAMESPACE} || kubectl create namespace ${K8S_NAMESPACE}
+            kubectl apply -f tcms-frontend.yaml -n ${K8S_NAMESPACE}
+            kubectl scale deployment tcms-frontend-app-deployment --replicas=2 -n ${K8S_NAMESPACE}
+        """
+    }
+}
+ else {
                         error "❌ Invalid deployment mode selected."
                     }
                 }
