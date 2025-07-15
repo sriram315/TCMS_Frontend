@@ -1,4 +1,4 @@
-import  { useState, useEffect } from "react";
+import { useState, useEffect } from "react";
 import { Formik, Form, Field, ErrorMessage, FormikHelpers } from "formik";
 import * as Yup from "yup";
 import { toast, ToastContainer } from "react-toastify";
@@ -25,7 +25,6 @@ interface TestCase {
   projectId: string;
 }
 
-
 // Define initial state
 const initialState: TestCase = {
   // testCaseId: "",
@@ -40,7 +39,7 @@ const initialState: TestCase = {
   module: "",
   userStory: "",
   projectId: "",
-  id: undefined
+  id: undefined,
 };
 
 // Define validation schema
@@ -111,7 +110,7 @@ export default function TestCaseEditForm() {
   const navigate = useNavigate();
   const token = sessionStorage.getItem("token") || ""; // Replace with your actual token retrieval method
 
-  const user =  JSON.parse(sessionStorage.getItem("user") || "{}");
+  const user = JSON.parse(sessionStorage.getItem("user") || "{}");
 
   const handleSubmit = async (
     values: TestCase,
@@ -119,7 +118,7 @@ export default function TestCaseEditForm() {
   ) => {
     try {
       setIsLoading(true);
-       await axios.put(
+      await axios.put(
         `${API_URL}/testcases/${initialValues.id}`,
         {
           ...values,
