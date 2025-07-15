@@ -9,7 +9,8 @@ pipeline {
         REPOSITORY_URI = "${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_DEFAULT_REGION}.amazonaws.com/${IMAGE_REPO_NAME}"
         AWS_ECR_URL = "${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_DEFAULT_REGION}.amazonaws.com"
         EKS_CLUSTER_NAME = "TCMS"
-        EC2_IP = "15.206.68.132" 
+        EC2_IP = "15.206.68.132"
+        K8S_NAMESPACE = "tcms"
     }
 
     parameters {
@@ -53,18 +54,18 @@ pipeline {
                 script {
                     if (params.MODE == 'EC2') {
                         echo "▶️ Deploying to EC2..."
-                        
-                        // First scale down EKS
+
+                        // Scale down EKS
                         withCredentials([[ $class: 'AmazonWebServicesCredentialsBinding', credentialsId: 'aws-creds-id' ]]) {
                             sh """
                                 aws eks update-kubeconfig --region ${AWS_DEFAULT_REGION} --name ${EKS_CLUSTER_NAME}
-                                kubectl scale deployment tcms-frontend-app-deployment --replicas=0 -n hunter || true
+                                kubectl scale deployment tcms-frontend-app-deployment --replicas=0 -n ${K8S_NAMESPACE} || true
                             """
                         }
 
-                        // SSH to EC2 and deploy container
+                        // Deploy to EC2
                         sh """
-                            ssh -o StrictHostKeyChecking=no -i /path/to/key.pem ubuntu@${EC2_IP} '
+                            ssh -o StrictHostKeyChecking=no -i /home/ubuntu/key.pem ubuntu@${EC2_IP} '
                                 docker pull ${REPOSITORY_URI}:${IMAGE_TAG} &&
                                 docker stop frontend || true &&
                                 docker rm frontend || true &&
@@ -78,15 +79,15 @@ pipeline {
                         withCredentials([[ $class: 'AmazonWebServicesCredentialsBinding', credentialsId: 'aws-creds-id' ]]) {
                             sh """
                                 aws eks update-kubeconfig --region ${AWS_DEFAULT_REGION} --name ${EKS_CLUSTER_NAME}
-                                
-                                # Ensure namespace exists
-                                kubectl get namespace hunter || kubectl create namespace hunter
 
-                                # Apply manifest
-                                kubectl apply -f hunter-frontend.yaml
+                                # Ensure namespace exists
+                                kubectl get namespace ${K8S_NAMESPACE} || kubectl create namespace ${K8S_NAMESPACE}
+
+                                # Apply Kubernetes manifest
+                                kubectl apply -f hunter-frontend.yaml -n ${K8S_NAMESPACE}
 
                                 # Scale up deployment
-                                kubectl scale deployment hunter-frontend-app-deployment --replicas=2 -n hunter
+                                kubectl scale deployment tcms-frontend-app-deployment --replicas=2 -n ${K8S_NAMESPACE}
                             """
                         }
                     } else {
