@@ -84,7 +84,7 @@ pipeline {
                                 kubectl get namespace ${K8S_NAMESPACE} || kubectl create namespace ${K8S_NAMESPACE}
 
                                 # Apply Kubernetes manifest
-                                kubectl apply -f hunter-frontend.yaml -n ${K8S_NAMESPACE}
+                                kubectl apply -f tcms-frontend.yaml -n ${K8S_NAMESPACE}
 
                                 # Scale up deployment
                                 kubectl scale deployment tcms-frontend-app-deployment --replicas=2 -n ${K8S_NAMESPACE}
