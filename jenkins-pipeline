@@ -66,6 +66,7 @@ pipeline {
                         // Deploy to EC2
                         sh """
                             ssh -o StrictHostKeyChecking=no -i /var/lib/jenkins/key.pem ubuntu@${EC2_IP} '
+                                docker login -u AWS -p $(aws ecr get-login-password --region ap-south-1) 677043464437.dkr.ecr.ap-south-1.amazonaws.com
                                 docker pull ${REPOSITORY_URI}:${IMAGE_TAG} &&
                                 docker stop frontend || true &&
                                 docker rm frontend || true &&
