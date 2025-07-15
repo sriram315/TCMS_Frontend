@@ -65,7 +65,7 @@ pipeline {
 
                         // Deploy to EC2
                         sh """
-                            ssh -o StrictHostKeyChecking=no -i /home/ubuntu/key.pem ubuntu@${EC2_IP} '
+                            ssh -o StrictHostKeyChecking=no -i /var/lib/jenkins/key.pem ubuntu@${EC2_IP} '
                                 docker pull ${REPOSITORY_URI}:${IMAGE_TAG} &&
                                 docker stop frontend || true &&
                                 docker rm frontend || true &&
