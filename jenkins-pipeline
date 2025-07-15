@@ -49,58 +49,64 @@ pipeline {
             }
         }
 
-        stage('Deploy Based on Mode') {
-            steps {
-                script {
-                    if (params.MODE == 'EC2') {
-                        echo "▶️ Deploying to EC2..."
+       stage('Deploy Based on Mode') {
+    steps {
+        script {
+            if (params.MODE == 'EC2') {
+                echo "▶️ Deploying to EC2..."
 
-                        // Scale down EKS
-                        withCredentials([[ $class: 'AmazonWebServicesCredentialsBinding', credentialsId: 'aws-creds-id' ]]) {
-                            sh """
-                                aws eks update-kubeconfig --region ${AWS_DEFAULT_REGION} --name ${EKS_CLUSTER_NAME}
-                                kubectl scale deployment tcms-frontend-app-deployment --replicas=0 -n ${K8S_NAMESPACE} || true
-                            """
-                        }
+                withCredentials([[ $class: 'AmazonWebServicesCredentialsBinding', credentialsId: 'aws-creds-id' ]]) {
+                    sh """
+                        aws eks update-kubeconfig --region ${AWS_DEFAULT_REGION} --name ${EKS_CLUSTER_NAME}
+                        kubectl scale deployment tcms-frontend-app-deployment --replicas=0 -n ${K8S_NAMESPACE} || true
 
-                        // Deploy to EC2
-                        sh """
-    ssh -o StrictHostKeyChecking=no -i /var/lib/jenkins/key.pem ubuntu@${EC2_IP} << 'ENDSSH'
-        aws ecr get-login-password --region ap-south-1 | docker login --username AWS --password-stdin 677043464437.dkr.ecr.ap-south-1.amazonaws.com
-        docker pull ${REPOSITORY_URI}:${IMAGE_TAG}
-        docker stop frontend || true
-        docker rm frontend || true
-        docker run -d --name frontend -p 80:3000 ${REPOSITORY_URI}:${IMAGE_TAG}
-ENDSSH
-"""
-
-
-                    }  else if (params.MODE == 'EKS') {
-    echo "▶️ Deploying to EKS..."
-
-    // Stop & remove container from EC2
-    sh """
-    ssh -o StrictHostKeyChecking=no -i /var/lib/jenkins/key.pem ubuntu@${EC2_IP} << 'ENDSSH'
-        docker stop frontend || true
-        docker rm frontend || true
-    ENDSSH
-    """
-
-    // Proceed with EKS deployment
-    withCredentials([[ $class: 'AmazonWebServicesCredentialsBinding', credentialsId: 'aws-creds-id' ]]) {
-        sh """
-            aws eks update-kubeconfig --region ${AWS_DEFAULT_REGION} --name ${EKS_CLUSTER_NAME}
-            kubectl get namespace ${K8S_NAMESPACE} || kubectl create namespace ${K8S_NAMESPACE}
-            kubectl apply -f tcms-frontend.yaml -n ${K8S_NAMESPACE}
-            kubectl scale deployment tcms-frontend-app-deployment --replicas=2 -n ${K8S_NAMESPACE}
-        """
-    }
-}
- else {
-                        error "❌ Invalid deployment mode selected."
-                    }
+                        # Scale EKS nodes down to 0
+                        aws eks update-nodegroup-config \
+                            --cluster-name ${EKS_CLUSTER_NAME} \
+                            --nodegroup-name <YOUR_NODEGROUP_NAME> \
+                            --scaling-config minSize=0,maxSize=2,desiredSize=0
+                    """
                 }
+
+                sh """
+ssh -o StrictHostKeyChecking=no -i /var/lib/jenkins/key.pem ubuntu@${EC2_IP} << 'ENDSSH'
+    aws ecr get-login-password --region ${AWS_DEFAULT_REGION} | docker login --username AWS --password-stdin ${AWS_ECR_URL}
+    docker pull ${REPOSITORY_URI}:${IMAGE_TAG}
+    docker stop frontend || true
+    docker rm frontend || true
+    docker run -d --name frontend -p 80:3000 ${REPOSITORY_URI}:${IMAGE_TAG}
+ENDSSH
+                """
+
+            } else if (params.MODE == 'EKS') {
+                echo "▶️ Deploying to EKS..."
+
+                withCredentials([[ $class: 'AmazonWebServicesCredentialsBinding', credentialsId: 'aws-creds-id' ]]) {
+                    sh """
+                        aws eks update-kubeconfig --region ${AWS_DEFAULT_REGION} --name ${EKS_CLUSTER_NAME}
+
+                        # Scale EKS nodes up if needed
+                        aws eks update-nodegroup-config \
+                            --cluster-name ${EKS_CLUSTER_NAME} \
+                            --nodegroup-name <YOUR_NODEGROUP_NAME> \
+                            --scaling-config minSize=1,maxSize=2,desiredSize=1
+
+                        # Ensure namespace exists
+                        kubectl get namespace ${K8S_NAMESPACE} || kubectl create namespace ${K8S_NAMESPACE}
+
+                        # Apply Kubernetes manifest
+                        kubectl apply -f tcms-frontend.yaml -n ${K8S_NAMESPACE}
+
+                        # Scale up deployment
+                        kubectl scale deployment tcms-frontend-app-deployment --replicas=2 -n ${K8S_NAMESPACE}
+                    """
+                }
+            } else {
+                error "❌ Invalid deployment mode selected."
             }
         }
+    }
+}
+
     }
 }
