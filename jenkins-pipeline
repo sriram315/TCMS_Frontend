@@ -11,6 +11,7 @@ pipeline {
         EKS_CLUSTER_NAME = "TCMS"
         EC2_IP = "15.206.68.132"
         K8S_NAMESPACE = "tcms"
+        NODE_GROUP ="tcms-node"
     }
 
     parameters {
@@ -63,7 +64,7 @@ pipeline {
                         # Scale EKS nodes down to 0
                         aws eks update-nodegroup-config \
                             --cluster-name ${EKS_CLUSTER_NAME} \
-                            --nodegroup-name <YOUR_NODEGROUP_NAME> \
+                            --nodegroup-name ${NODE_GROUP} \
                             --scaling-config minSize=0,maxSize=2,desiredSize=0
                     """
                 }
@@ -88,7 +89,7 @@ ENDSSH
                         # Scale EKS nodes up if needed
                         aws eks update-nodegroup-config \
                             --cluster-name ${EKS_CLUSTER_NAME} \
-                            --nodegroup-name <YOUR_NODEGROUP_NAME> \
+                            --nodegroup-name ${NODE_GROUP} \
                             --scaling-config minSize=1,maxSize=2,desiredSize=1
 
                         # Ensure namespace exists
