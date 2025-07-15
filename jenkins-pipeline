@@ -8,8 +8,8 @@ pipeline {
         IMAGE_TAG = "latest"
         REPOSITORY_URI = "${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_DEFAULT_REGION}.amazonaws.com/${IMAGE_REPO_NAME}"
         AWS_ECR_URL = "${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_DEFAULT_REGION}.amazonaws.com"
-        EKS_CLUSTER_NAME = "tcms-eks"
-        EC2_IP = "your.ec2.public.ip" // replace this
+        EKS_CLUSTER_NAME = "TCMS"
+        EC2_IP = "15.206.68.132" 
     }
 
     parameters {
