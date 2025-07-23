@@ -2,7 +2,7 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: tcms-frontend-app-deployment
-  namespace: tcms
+  namespace: dev
   labels:
     app.kubernetes.io/name: tcms-frontend-app
 spec:
@@ -26,7 +26,7 @@ spec:
 apiVersion: v1
 kind: Service
 metadata:
-  namespace: tcms
+  namespace: dev
   name: tcms-frontend-app-service
 spec:
   ports:
