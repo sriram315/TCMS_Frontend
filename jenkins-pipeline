@@ -1,4 +1,4 @@
-"pipeline {
+pipeline {
     agent any
     environment {
         AWS_ACCOUNT_ID=""677043464437""
@@ -79,4 +79,3 @@
         //}
     //}
 }
-"
