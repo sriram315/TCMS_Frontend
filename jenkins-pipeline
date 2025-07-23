@@ -1,11 +1,11 @@
 pipeline {
     agent any
     environment {
-        AWS_ACCOUNT_ID=""677043464437""
-        AWS_DEFAULT_REGION=""ap-south-1""
-        IMAGE_REPO_NAME=""tcms""
-        IMAGE_TAG=""latest""
-        REPOSITORY_URI = ""677043464437.dkr.ecr.ap-south-1.amazonaws.com/tcms""
+        AWS_ACCOUNT_ID="677043464437"
+        AWS_DEFAULT_REGION="ap-south-1"
+        IMAGE_REPO_NAME="tcms"
+        IMAGE_TAG="latest"
+        REPOSITORY_URI = "677043464437.dkr.ecr.ap-south-1.amazonaws.com/tcms"
         AWS_ECR_URL = '677043464437.dkr.ecr.ap-south-1.amazonaws.com'
     }
 
@@ -20,8 +20,7 @@ pipeline {
     stage('Building image') {
       steps{
         script {
-        
- def dockerImage = docker.build("${IMAGE_REPO_NAME}:${IMAGE_TAG}")
+          def dockerImage = docker.build "${IMAGE_REPO_NAME}:${IMAGE_TAG}"
           
         }
       }
@@ -45,8 +44,8 @@ pipeline {
     stage('Pushing to ECR') {
      steps{  
          script {
-                sh """"""docker tag ${IMAGE_REPO_NAME}:${IMAGE_TAG} ${REPOSITORY_URI}:$IMAGE_TAG""""""
-                sh """"""docker push ${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_DEFAULT_REGION}.amazonaws.com/${IMAGE_REPO_NAME}:${IMAGE_TAG}""""""
+                sh """docker tag ${IMAGE_REPO_NAME}:${IMAGE_TAG} ${REPOSITORY_URI}:$IMAGE_TAG"""
+                sh """docker push ${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_DEFAULT_REGION}.amazonaws.com/${IMAGE_REPO_NAME}:${IMAGE_TAG}"""
          }
         }
       }
@@ -58,10 +57,10 @@ pipeline {
                     credentialsId: 'aws-creds-id' // Should match above or use different valid one
                 ]]) {
                     script {
-                        sh ""aws eks update-kubeconfig --region ${AWS_DEFAULT_REGION} --name tcms-eks""
-                        sh ""kubectl delete deployment tcms-frontend-app-deployment -n tcms || true""
-                        sh ""sleep 30""
-                        sh ""kubectl apply -f tcms-frontend.yaml""
+                        sh "aws eks update-kubeconfig --region ${AWS_DEFAULT_REGION} --name tcms-eks"
+                        sh "kubectl delete deployment tcms-frontend-app-deployment -n tcms || true"
+                        sh "sleep 30"
+                        sh "kubectl apply -f tcms-frontend.yaml"
                     }
                 }
             }
