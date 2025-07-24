@@ -4,7 +4,15 @@ import PageHeader from "../components/common/PageHeader";
 import axios from "axios";
 import { format } from "date-fns";
 
-import { Plus, CheckCircle, XCircle, AlertTriangle, Clock, CalendarClock, ChevronDownIcon } from "lucide-react";
+import {
+  Plus,
+  CheckCircle,
+  XCircle,
+  AlertTriangle,
+  Clock,
+  CalendarClock,
+  ChevronDownIcon,
+} from "lucide-react";
 import { API_URL } from "../config";
 
 const statusColors = {
@@ -46,15 +54,22 @@ const calculateTestRunStats = (testCases) => {
 
   // Calculate progress as the percentage of test cases that are not untested
   const completedTests = stats.passed + stats.failed + stats.blocked;
-  const progress = stats.total > 0 ? Math.trunc((completedTests / stats.total) * 100) : 0;
+  const progress =
+    stats.total > 0 ? Math.trunc((completedTests / stats.total) * 100) : 0;
 
   // Determine test run status based on test case counts
   let testRunStatus = "Not Started";
   if (stats.total === stats.untested) {
     testRunStatus = "Not Started";
-  } else if (stats.untested === 0 && stats.passed + stats.failed + stats.blocked === stats.total) {
+  } else if (
+    stats.untested === 0 &&
+    stats.passed + stats.failed + stats.blocked === stats.total
+  ) {
     testRunStatus = "Completed";
-  } else if (stats.untested < stats.total && (stats.passed > 0 || stats.failed > 0 || stats.blocked > 0)) {
+  } else if (
+    stats.untested < stats.total &&
+    (stats.passed > 0 || stats.failed > 0 || stats.blocked > 0)
+  ) {
     testRunStatus = "In Progress";
   }
 
@@ -88,12 +103,15 @@ const TestRuns: React.FC = () => {
           userProjects = response.data;
         } else if (String(role).toLowerCase() === "admin") {
           // Admin sees only projects they created
-          userProjects = response.data.filter((project) => project.createdBy?._id === userId);
+          userProjects = response.data.filter(
+            (project) => project.createdBy?._id === userId
+          );
         } else {
           // Other roles see only projects they're assigned to
           userProjects = response.data.filter(
             (project) =>
-              Array.isArray(project.assignedTo) && project.assignedTo.some((assignee) => assignee._id === userId)
+              Array.isArray(project.assignedTo) &&
+              project.assignedTo.some((assignee) => assignee._id === userId)
           );
         }
 
@@ -114,7 +132,6 @@ const TestRuns: React.FC = () => {
     try {
       const { data } = await axios.get(`${API_URL}/test-runs`);
 
-
       const filteredData =
         String(role).toLowerCase() === "superadmin"
           ? data
@@ -123,7 +140,9 @@ const TestRuns: React.FC = () => {
           : data.filter((testRun: any) => testRun?.assignedTo?._id === userId);
 
       const processedTestRuns = filteredData.map((testRun, index) => {
-        const { stats, progress, testRunStatus } = calculateTestRunStats(testRun.testCases || []);
+        const { stats, progress, testRunStatus } = calculateTestRunStats(
+          testRun.testCases || []
+        );
         return {
           ...testRun,
           testCases: testRun.testCases || [], // Ensure testCases is always an array
@@ -145,7 +164,9 @@ const TestRuns: React.FC = () => {
       fetchTestRuns();
     } else {
       const processedTestRuns = location.state.testRun.map((test, index) => {
-        const { stats, progress, testRunStatus } = calculateTestRunStats(test.testCases || []);
+        const { stats, progress, testRunStatus } = calculateTestRunStats(
+          test.testCases || []
+        );
 
         return {
           ...test,
@@ -165,8 +186,9 @@ const TestRuns: React.FC = () => {
     if (selectedProjectId === "All Projects") {
       setTestRuns(allTestRuns);
     } else {
-
-      const filteredRuns = allTestRuns.filter((testRun) => testRun.projectId === selectedProjectId);
+      const filteredRuns = allTestRuns.filter(
+        (testRun) => testRun.projectId === selectedProjectId
+      );
       setTestRuns(filteredRuns);
     }
   }, [selectedProjectId, allTestRuns]);
@@ -208,7 +230,11 @@ const TestRuns: React.FC = () => {
             )}
 
             {String(role).toLowerCase() === "admin" && (
-              <button type="button" className="btn btn-primary bg-indigo-900" onClick={() => navigate("testRunForm")}>
+              <button
+                type="button"
+                className="btn btn-primary bg-indigo-900"
+                onClick={() => navigate("testRunForm")}
+              >
                 <Plus className="h-5 w-5 mr-2" />
                 New Test Run
               </button>
@@ -235,7 +261,9 @@ const TestRuns: React.FC = () => {
                     </h3>
                     <span
                       className={`ml-3 inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium border ${
-                        statusColors[testRun?.status as keyof typeof statusColors] || statusColors["Not Started"]
+                        statusColors[
+                          testRun?.status as keyof typeof statusColors
+                        ] || statusColors["Not Started"]
                       }`}
                     >
                       {testRun?.status || "Not Started"}
@@ -244,23 +272,36 @@ const TestRuns: React.FC = () => {
                   <div className="mt-1 flex items-center text-sm text-gray-500 gap-x-3">
                     <div className="flex items-center mr-4">
                       <CalendarClock className="h-4 w-4 mr-1" />
-                      Created: {testRun?.createdAt ? format(new Date(testRun.createdAt), "MMM d, yyyy") : "N/A"}
+                      Created:{" "}
+                      {testRun?.createdAt
+                        ? format(new Date(testRun.createdAt), "MMM d, yyyy")
+                        : "N/A"}
                     </div>
                     <div className="flex items-center">
                       <Clock className="h-4 w-4 mr-1" />
-                      Due from: {testRun?.dueDateFrom ? format(new Date(testRun?.dueDateFrom), "MMM d, yyyy") : "N/A"}
+                      Due from:{" "}
+                      {testRun?.dueDateFrom
+                        ? format(new Date(testRun?.dueDateFrom), "MMM d, yyyy")
+                        : "N/A"}
                     </div>
                     <div className="flex items-center">
                       <Clock className="h-4 w-4 mr-1" />
-                      Due to: {testRun?.dueDateTo ? format(new Date(testRun?.dueDateTo), "MMM d, yyyy") : "N/A"}
+                      Due to:{" "}
+                      {testRun?.dueDateTo
+                        ? format(new Date(testRun?.dueDateTo), "MMM d, yyyy")
+                        : "N/A"}
                     </div>
                   </div>
                 </div>
                 <div className="flex items-center">
                   <div className="flex flex-col mr-6">
                     <div className="flex items-center mb-1">
-                      <div className="text-sm font-medium text-gray-900 mr-1">Progress</div>
-                      <span className="text-sm font-medium text-gray-900">{testRun?.progress || 0}%</span>
+                      <div className="text-sm font-medium text-gray-900 mr-1">
+                        Progress
+                      </div>
+                      <span className="text-sm font-medium text-gray-900">
+                        {testRun?.progress || 0}%
+                      </span>
                     </div>
                     <div className="w-36 bg-gray-200 rounded-full h-2.5">
                       <div
@@ -277,22 +318,32 @@ const TestRuns: React.FC = () => {
               <div className="mt-4 grid grid-cols-2 sm:grid-cols-5 gap-2">
                 <div className="flex items-center">
                   <CheckCircle className="h-4 w-4 text-success-500 mr-1" />
-                  <span className="text-sm text-gray-600">{testRun?.stats?.passed || 0} Passed</span>
+                  <span className="text-sm text-gray-600">
+                    {testRun?.stats?.passed || 0} Passed
+                  </span>
                 </div>
                 <div className="flex items-center">
                   <XCircle className="h-4 w-4 text-danger-500 mr-1" />
-                  <span className="text-sm text-gray-600">{testRun?.stats?.failed || 0} Failed</span>
+                  <span className="text-sm text-gray-600">
+                    {testRun?.stats?.failed || 0} Failed
+                  </span>
                 </div>
                 <div className="flex items-center">
                   <AlertTriangle className="h-4 w-4 text-warning-500 mr-1" />
-                  <span className="text-sm text-gray-600">{testRun?.stats?.blocked || 0} Blocked</span>
+                  <span className="text-sm text-gray-600">
+                    {testRun?.stats?.blocked || 0} Blocked
+                  </span>
                 </div>
                 <div className="flex items-center col-span-2 sm:col-span-1">
                   <div className="h-4 w-4 rounded-full border-2 border-gray-300 mr-1"></div>
-                  <span className="text-sm text-gray-600">{testRun?.stats?.untested || 0} Untested</span>
+                  <span className="text-sm text-gray-600">
+                    {testRun?.stats?.untested || 0} Untested
+                  </span>
                 </div>
                 <div className="flex items-center">
-                  <span className="text-sm font-medium text-gray-700">{testRun?.stats?.total || 0} Total</span>
+                  <span className="text-sm font-medium text-gray-700">
+                    {testRun?.stats?.total || 0} Total
+                  </span>
                 </div>
               </div>
             </li>
@@ -301,7 +352,9 @@ const TestRuns: React.FC = () => {
 
         {filteredTestRuns.length === 0 && (
           <div className="p-8 text-center">
-            <p className="text-gray-500">No test runs found matching your criteria.</p>
+            <p className="text-gray-500">
+              No test runs found matching your criteria.
+            </p>
           </div>
         )}
       </div>

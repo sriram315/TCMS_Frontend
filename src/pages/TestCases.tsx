@@ -55,11 +55,14 @@ const TestCases: React.FC = () => {
         if (String(role).toLowerCase() === "superadmin") {
           userProjects = response.data;
         } else if (String(role).toLowerCase() === "admin") {
-          userProjects = response.data.filter((project) => project.createdBy?._id === userId);
+          userProjects = response.data.filter(
+            (project) => project.createdBy?._id === userId
+          );
         } else {
           userProjects = response.data.filter(
             (project) =>
-              Array.isArray(project.assignedTo) && project.assignedTo.some((assignee) => assignee._id === userId)
+              Array.isArray(project.assignedTo) &&
+              project.assignedTo.some((assignee) => assignee._id === userId)
           );
         }
 
@@ -118,12 +121,18 @@ const TestCases: React.FC = () => {
       if (String(role).toLowerCase() === "superadmin") {
         filteredData = data;
       } else if (String(role).toLowerCase() === "admin") {
-        filteredData = data.filter((testCase) => projects.some((project) => project._id === testCase.projectId));
+        filteredData = data.filter((testCase) =>
+          projects.some((project) => project._id === testCase.projectId)
+        );
       } else {
-        filteredData = data.filter((testCase) => projects.some((project) => project._id === testCase.projectId));
+        filteredData = data.filter((testCase) =>
+          projects.some((project) => project._id === testCase.projectId)
+        );
       }
 
-      const projectIds = Array.from(new Set(filteredData.map((testCase) => testCase.projectId)));
+      const projectIds = Array.from(
+        new Set(filteredData.map((testCase) => testCase.projectId))
+      );
 
       await Promise.all(projectIds.map(fetchProjectById));
 
@@ -142,7 +151,9 @@ const TestCases: React.FC = () => {
 
   const handleUpload = async () => {
     if (!uploadFile || !uploadProjectId || !moduleName || !email) {
-      setUploadError("Please select a file, project, enter a module name, and ensure you are logged in");
+      setUploadError(
+        "Please select a file, project, enter a module name, and ensure you are logged in"
+      );
       return;
     }
 
@@ -169,7 +180,9 @@ const TestCases: React.FC = () => {
       setModuleName("");
       fetchData();
     } catch (error) {
-      setUploadError(error.response?.data?.error || "Failed to upload test cases");
+      setUploadError(
+        error.response?.data?.error || "Failed to upload test cases"
+      );
     } finally {
       setIsUploading(false);
     }
@@ -192,7 +205,9 @@ const TestCases: React.FC = () => {
     if (selectedProjectId === "All Projects") {
       updatedTestCases = allTestCases;
     } else {
-      updatedTestCases = allTestCases.filter((testCase) => testCase.projectId === selectedProjectId);
+      updatedTestCases = allTestCases.filter(
+        (testCase) => testCase.projectId === selectedProjectId
+      );
       if (selectedProjectId && !projectMap[selectedProjectId]) {
         fetchProjectById(selectedProjectId);
       }
@@ -213,7 +228,7 @@ const TestCases: React.FC = () => {
         actions={
           <>
             {projects?.length > 0 && (
-              <div className="pr-5">
+              <div className="">
                 <div className="mt-2 grid grid-cols-1">
                   <select
                     id="projectId"
@@ -224,7 +239,10 @@ const TestCases: React.FC = () => {
                   >
                     <option value="All Projects">All Projects</option>
                     {projects.map((filteredProject) => (
-                      <option key={filteredProject._id} value={filteredProject._id}>
+                      <option
+                        key={filteredProject._id}
+                        value={filteredProject._id}
+                      >
                         {filteredProject.name}
                       </option>
                     ))}
@@ -237,7 +255,11 @@ const TestCases: React.FC = () => {
               </div>
             )}
             {!String(role).toLowerCase().includes("admin") && (
-              <button type="button" className="btn btn-outline mr-3 h-8 mt-2" onClick={() => setShowUploadModal(true)}>
+              <button
+                type="button"
+                className="btn btn-outline mr-3 h-8 mt-2"
+                onClick={() => setShowUploadModal(true)}
+              >
                 <Upload className="h-3 w-3 mr-2" />
                 Upload Excel
               </button>
@@ -259,9 +281,15 @@ const TestCases: React.FC = () => {
         <div className="fixed inset-0 bg-gray-600 bg-opacity-50 flex items-center justify-center">
           <div className="bg-white p-6 rounded-lg shadow-lg w-full max-w-md">
             <h3 className="text-lg font-semibold mb-4">Upload Test Cases</h3>
-            {uploadError && <div className="p-2 text-red-600 bg-red-100 rounded-md mb-4">{uploadError}</div>}
+            {uploadError && (
+              <div className="p-2 text-red-600 bg-red-100 rounded-md mb-4">
+                {uploadError}
+              </div>
+            )}
             <div className="mb-4">
-              <label className="block text-sm font-medium text-gray-700">Excel File</label>
+              <label className="block text-sm font-medium text-gray-700">
+                Excel File
+              </label>
               <input
                 type="file"
                 accept=".xlsx,.xls"
@@ -272,10 +300,16 @@ const TestCases: React.FC = () => {
                 }}
                 className="mt-1 block w-full border border-gray-300 rounded-md p-2"
               />
-              {uploadFile && <p className="mt-1 text-sm text-gray-600">Selected: {uploadFile.name}</p>}
+              {uploadFile && (
+                <p className="mt-1 text-sm text-gray-600">
+                  Selected: {uploadFile.name}
+                </p>
+              )}
             </div>
             <div className="mb-4">
-              <label className="block text-sm font-medium text-gray-700">Project</label>
+              <label className="block text-sm font-medium text-gray-700">
+                Project
+              </label>
               <select
                 value={uploadProjectId}
                 onChange={(e) => setUploadProjectId(e.target.value)}
@@ -290,7 +324,9 @@ const TestCases: React.FC = () => {
               </select>
             </div>
             <div className="mb-4">
-              <label className="block text-sm font-medium text-gray-700">Module Name</label>
+              <label className="block text-sm font-medium text-gray-700">
+                Module Name
+              </label>
               <input
                 type="text"
                 value={moduleName}
@@ -313,14 +349,20 @@ const TestCases: React.FC = () => {
               >
                 Cancel
               </button>
-              <button className="btn btn-primary bg-indigo-900" onClick={handleUpload} disabled={isUploading}>
+              <button
+                className="btn btn-primary bg-indigo-900"
+                onClick={handleUpload}
+                disabled={isUploading}
+              >
                 Upload
               </button>
             </div>
           </div>
         </div>
       )}
-      {error && <div className="p-4 text-red-600 bg-red-100 rounded-md">{error}</div>}
+      {error && (
+        <div className="p-4 text-red-600 bg-red-100 rounded-md">{error}</div>
+      )}
       {isLoading && (
         <div className="p-8 text-center">
           <p className="text-gray-500">Loading test cases...</p>
@@ -331,7 +373,9 @@ const TestCases: React.FC = () => {
           <div className="w-full md:w-72 flex-shrink-0">
             <div className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
               <div className="p-4 py-5 border-b border-gray-200">
-                <h3 className="text-lg font-semibold text-gray-900 ">Modules</h3>
+                <h3 className="text-lg font-semibold text-gray-900 ">
+                  Modules
+                </h3>
               </div>
               <div className="p-2">
                 {Object.keys(categorizedTestCases).length === 0 ? (
@@ -366,14 +410,14 @@ const TestCases: React.FC = () => {
             </div>
           </div>
 
-          <div className="flex-1">
+          <div className="flex-1 overflow-x-auto">
             <div className="bg-white rounded-lg shadow-sm border border-gray-200">
               <div className="overflow-x-auto">
-                <table className="table">
+                <table className="table ">
                   <thead>
                     <tr>
-                      <th scope="col">ID</th>
-                      <th scope="col">Title</th>
+                      <th scope="col">Test Id</th>
+                      <th scope="col">Test Cases</th>
                       <th scope="col">Status</th>
                       <th scope="col">Priority</th>
                       <th scope="col">Modules</th>
@@ -384,10 +428,16 @@ const TestCases: React.FC = () => {
                   <tbody>
                     {selectedSection
                       ? categorizedTestCases[selectedSection]
-                          ?.filter((testCase: any) => testCase.title.toLowerCase().includes(searchQuery.toLowerCase()))
+                          ?.filter((testCase: any) =>
+                            testCase.title
+                              .toLowerCase()
+                              .includes(searchQuery.toLowerCase())
+                          )
                           .map((testCase: any) => (
                             <tr key={testCase._id} className="hover:bg-gray-50">
-                              <td className="font-medium">{testCase.testCaseId}</td>
+                              <td className="font-medium">
+                                {testCase.testCaseId}
+                              </td>
                               <td className="max-w-48 truncate">
                                 <Link
                                   state={testCase}
@@ -398,7 +448,10 @@ const TestCases: React.FC = () => {
                                 </Link>
                               </td>
                               <td>
-                                <StatusBadge status={testCase.status} size="sm" />
+                                <StatusBadge
+                                  status={testCase.status}
+                                  size="sm"
+                                />
                               </td>
                               <td>
                                 <span
@@ -413,22 +466,31 @@ const TestCases: React.FC = () => {
                                   {testCase.priority}
                                 </span>
                               </td>
-                              <td className="text-gray-600 truncate max-w-48">{testCase.module}</td>
+                              <td className="text-gray-600 truncate max-w-48">
+                                {testCase.module}
+                              </td>
                               <td className="text-gray-600 truncate max-w-48">
                                 {projectMap[testCase.projectId] || "Loading..."}
                               </td>
-                              <td className="text-gray-600">{testCase.updatedAt.slice(0, 10)}</td>
+                              <td className="text-gray-600">
+                                {testCase.updatedAt.slice(0, 10)}
+                              </td>
                             </tr>
                           )) || (
                           <tr>
-                            <td colSpan={7} className="text-center text-gray-500">
+                            <td
+                              colSpan={7}
+                              className="text-center text-gray-500"
+                            >
                               No test cases found for this module.
                             </td>
                           </tr>
                         )
                       : filteredTestCases.map((testCase: any) => (
                           <tr key={testCase._id} className="hover:bg-gray-50">
-                            <td className="font-medium">{testCase.testCaseId}</td>
+                            <td className="font-medium">
+                              {testCase.testCaseId}
+                            </td>
                             <td className="max-w-48 truncate">
                               <Link
                                 state={testCase}
@@ -454,12 +516,17 @@ const TestCases: React.FC = () => {
                                 {testCase.priority}
                               </span>
                             </td>
-                            <td className="text-gray-600 truncate max-w-48">{testCase.module}</td>
+                            <td className="text-gray-600 truncate max-w-48">
+                              {testCase.module}
+                            </td>
                             <td className="text-gray-600 truncate max-w-48">
                               {projectMap[testCase.projectId] || "Loading..."}
                             </td>
                             <td className="text-gray-600 min-w-32">
-                              {format(new Date(testCase?.updatedAt), "MMMM dd, yyyy")}
+                              {format(
+                                new Date(testCase?.updatedAt),
+                                "MMMM dd, yyyy"
+                              )}
                             </td>
                           </tr>
                         ))}
@@ -468,7 +535,9 @@ const TestCases: React.FC = () => {
               </div>
               {filteredTestCases.length === 0 && !selectedSection && (
                 <div className="p-8 text-center">
-                  <p className="text-gray-500">No test cases found matching your criteria.</p>
+                  <p className="text-gray-500">
+                    No test cases found matching your criteria.
+                  </p>
                 </div>
               )}
             </div>

@@ -48,7 +48,7 @@ const initialState: TestCase = {
 
 // Define validation schema
 const validationSchema = Yup.object({
-
+  testCaseId: Yup.string().required("Test Id is required"),
   title: Yup.string().required("Title is required"),
   module: Yup.string().required("Module is required"),
   preRequisite: Yup.string().required("Pre-Requisite is required"),
@@ -91,15 +91,11 @@ export default function TestCaseForm({ selected }: TestCaseFormProps) {
   // Function to create a test case
   const createTestCase = async (data: any) => {
     try {
-     await axios.post(
-        `${API_URL}/testcases`,
-        data,
-        {
-          headers: {
-            Authorization: `Bearer ${userToken}`,
-          },
-        }
-      );
+      await axios.post(`${API_URL}/testcases`, data, {
+        headers: {
+          Authorization: `Bearer ${userToken}`,
+        },
+      });
       toast.success("Test case saved successfully!", {
         position: "top-right",
         autoClose: 3000,
@@ -201,14 +197,19 @@ export default function TestCaseForm({ selected }: TestCaseFormProps) {
           {({ errors, touched }) => (
             <Form className="space-y-4 sm:space-y-5">
               {[
-                { label: "Title", name: "title", length: 50 },
+                { label: "Test Id", name: "testCaseId", length: 50 },
+                { label: "Test Case", name: "title", length: 50 },
                 { label: "Module", name: "module", length: 30 },
                 {
                   label: "Pre-Conditions",
                   name: "preRequisite",
                   type: "textarea",
                 },
-                { label: "Description", name: "description", type: "textarea" },
+                {
+                  label: "Description/Summary",
+                  name: "description",
+                  type: "textarea",
+                },
                 { label: "Test Steps", name: "steps", type: "textarea" },
                 {
                   label: "Expected Result",
@@ -216,10 +217,15 @@ export default function TestCaseForm({ selected }: TestCaseFormProps) {
                   type: "textarea",
                 },
                 {
-                  label: "User story ID",
-                  name: "userStory",
-                  length: 20,
+                  label: "Test Executed By",
+                  name: "executedBy",
+                  length: 50,
                 },
+                // {
+                //   label: "User story ID",
+                //   name: "userStory",
+                //   length: 20,
+                // },
               ].map((field) => (
                 <div key={field.name} className="flex flex-col">
                   <label
@@ -255,7 +261,7 @@ export default function TestCaseForm({ selected }: TestCaseFormProps) {
                     htmlFor="type"
                     className="block text-sm font-medium text-gray-700 mb-1"
                   >
-                    Type
+                    Test Case Type
                   </label>
                   <Field
                     as="select"
@@ -267,6 +273,8 @@ export default function TestCaseForm({ selected }: TestCaseFormProps) {
                         : "border-gray-300"
                     }`}
                   >
+                    <option value="functional">Positive</option>
+                    <option value="functional">Negative</option>
                     <option value="functional">Functional</option>
                     <option value="performance">Performance</option>
                     <option value="regression">Regression</option>
@@ -314,7 +322,7 @@ export default function TestCaseForm({ selected }: TestCaseFormProps) {
                   />
                 </div>
 
-                <div>
+                {/* <div>
                   <label
                     htmlFor="automationStatus"
                     className="block text-sm font-medium text-gray-700 mb-1"
@@ -339,7 +347,7 @@ export default function TestCaseForm({ selected }: TestCaseFormProps) {
                     component="div"
                     className="text-red-500 text-xs mt-1"
                   />
-                </div>
+                </div> */}
                 <div>
                   <label
                     htmlFor="projectId"

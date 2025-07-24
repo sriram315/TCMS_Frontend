@@ -28,6 +28,7 @@ interface TestCase {
   automationStatus?: string;
   url?: string;
   isTestPlan?: boolean;
+  executedBy?: String;
 }
 
 const TestCaseDetail: React.FC = () => {
@@ -45,14 +46,18 @@ const TestCaseDetail: React.FC = () => {
   }
   const [projects, setProjects] = useState<Project[]>([]);
   const [projectsName, setProjectsName] = useState("");
-  const userEmail: string = JSON.parse(sessionStorage.getItem("user") || "{}")?.email || "";
-  const userRole: string = JSON.parse(sessionStorage.getItem("user") || "{}")?.role || "";
+  const userEmail: string =
+    JSON.parse(sessionStorage.getItem("user") || "{}")?.email || "";
+  const userRole: string =
+    JSON.parse(sessionStorage.getItem("user") || "{}")?.role || "";
   const [history, setHistory] = useState<any>([]);
   const navigate = useNavigate();
   const [testCase, setTestCase] = useState<TestCase>({} as TestCase);
 
   // Check if the URL matches the pattern for hiding history tab
-  const isTestRunDetailUrl = location.pathname.includes("/test-plans/test-runs/test-detail/");
+  const isTestRunDetailUrl = location.pathname.includes(
+    "/test-plans/test-runs/test-detail/"
+  );
 
   useEffect(() => {
     setTestCase(testCaseData);
@@ -88,7 +93,9 @@ const TestCaseDetail: React.FC = () => {
     axios
       .get(`${API_URL}/testcases`)
       .then((response) => {
-        const filteredTestCases = response.data.filter((testCases: any) => testCases._id === testCaseData._id);
+        const filteredTestCases = response.data.filter(
+          (testCases: any) => testCases._id === testCaseData._id
+        );
 
         setTestCase((prev) => ({
           ...prev,
@@ -129,7 +136,9 @@ const TestCaseDetail: React.FC = () => {
   }, []);
 
   useEffect(() => {
-    const projectDetails = projects.filter((project) => project?._id === testCase.projectId);
+    const projectDetails = projects.filter(
+      (project) => project?._id === testCase.projectId
+    );
     setProjectsName(projectDetails[0]?.name);
   }, [projects, testCase]);
 
@@ -149,7 +158,11 @@ const TestCaseDetail: React.FC = () => {
             {!isTestRunDetailUrl &&
               String(userRole).toLowerCase() !== "admin" &&
               String(userRole).toLowerCase() !== "superadmin" && (
-                <button type="button" onClick={handleEdit} className="btn btn-outline mr-2">
+                <button
+                  type="button"
+                  onClick={handleEdit}
+                  className="btn btn-outline mr-2"
+                >
                   <Edit className="h-4 w-4 mr-1" />
                   Edit
                 </button>
@@ -194,14 +207,23 @@ const TestCaseDetail: React.FC = () => {
                   <dl className="grid grid-cols-[120px_1fr] gap-3 text-sm">
                     <dt className="font-medium text-gray-500">Status:</dt>
                     <dd>
-                      <StatusBadge status={testCaseData?.status} testCaseId={""} />
+                      <StatusBadge
+                        status={testCaseData?.status}
+                        testCaseId={""}
+                      />
                     </dd>
 
                     <dt className="font-medium text-gray-500">Module:</dt>
-                    <dd className="text-gray-900 truncate max-w-48">{testCase.module}</dd>
+                    <dd className="text-gray-900 truncate max-w-48">
+                      {testCase.module}
+                    </dd>
 
-                    <dt className="font-medium text-gray-500">Type:</dt>
-                    <dd className="text-gray-900 first-letter:uppercase">{testCase.type}</dd>
+                    <dt className="font-medium text-gray-500">
+                      Test Case Type:
+                    </dt>
+                    <dd className="text-gray-900 first-letter:uppercase">
+                      {testCase.type}
+                    </dd>
 
                     <dt className="font-medium text-gray-500">Priority:</dt>
                     <dd>
@@ -217,23 +239,32 @@ const TestCaseDetail: React.FC = () => {
                         {testCase.priority}
                       </span>
                     </dd>
+                    <dt className="font-medium text-gray-500">Executed By:</dt>
+                    <dd className="text-gray-900 first-letter:uppercase">
+                      {testCase?.executedBy || "N/A"}
+                    </dd>
                   </dl>
                 </div>
 
                 <div>
                   <dl className="grid grid-cols-[120px_1fr] gap-3 text-sm">
                     <dt className="font-medium text-gray-500">Created by:</dt>
-                    <dd className="text-gray-900 truncate max-w-72">{testCase && testCase.createdBy}</dd>
+                    <dd className="text-gray-900 truncate max-w-72">
+                      {testCase && testCase.createdBy}
+                    </dd>
 
                     <dt className="font-medium text-gray-500">Created on:</dt>
                     <dd className="text-gray-900">
-                      {testCase?.createdAt && format(new Date(testCase?.createdAt), "MMMM dd, yyyy")}
+                      {testCase?.createdAt &&
+                        format(new Date(testCase?.createdAt), "MMMM dd, yyyy")}
                     </dd>
 
                     <dt className="font-medium text-gray-500">Updated on:</dt>
                     <dd className="text-gray-900">
                       {}
-                      {testCase?.updatedAt && testCase?.createdAt && testCase?.updatedAt > testCase?.createdAt
+                      {testCase?.updatedAt &&
+                      testCase?.createdAt &&
+                      testCase?.updatedAt > testCase?.createdAt
                         ? format(new Date(testCase?.updatedAt), "MMMM dd, yyyy")
                         : "N/A"}
                     </dd>
@@ -244,36 +275,48 @@ const TestCaseDetail: React.FC = () => {
               </div>
 
               <div className="mb-6">
-                <h3 className="text-lg font-medium text-gray-900 mb-2">Description</h3>
+                <h3 className="text-lg font-medium text-gray-900 mb-2">
+                  Description/Summary
+                </h3>
                 <div className="text-gray-700 bg-gray-50 p-3 rounded border border-gray-200">
                   <p>{testCase.description}</p>
                 </div>
               </div>
 
               <div className="mb-6">
-                <h3 className="text-lg font-medium text-gray-900 mb-2">Pre-Conditions</h3>
+                <h3 className="text-lg font-medium text-gray-900 mb-2">
+                  Pre-Conditions
+                </h3>
                 <div className="text-gray-700 bg-gray-50 p-3 rounded border border-gray-200">
                   <p>{testCase.preRequisite}</p>
                 </div>
               </div>
               <div className="flex gap-x-4 ">
                 <div className="w-1/2 border">
-                  <h3 className="text-lg font-medium text-gray-900 mb-2 text-center  border-b">Test Steps</h3>
+                  <h3 className="text-lg font-medium text-gray-900 mb-2 text-center  border-b">
+                    Test Steps
+                  </h3>
                   <div className="">
                     <div className="p-4">
-                      {testCase?.steps?.split(/(?=\d+\.)/).map((step, index) => (
-                        <p key={index}>{step.trim()}</p>
-                      ))}
+                      {testCase?.steps
+                        ?.split(/(?=\d+\.)/)
+                        .map((step, index) => (
+                          <p key={index}>{step.trim()}</p>
+                        ))}
                     </div>
                   </div>
                 </div>
                 <div className="w-1/2 border">
-                  <h3 className="text-lg font-medium text-gray-900 mb-2 text-center border-b">Expected Results</h3>
+                  <h3 className="text-lg font-medium text-gray-900 mb-2 text-center border-b">
+                    Expected Results
+                  </h3>
                   <div className="p-4">
                     <div>
-                      {testCase?.expectedResult?.split(/(?=\d+\.)/).map((result, index) => (
-                        <p key={index}>{result.trim()}</p>
-                      ))}
+                      {testCase?.expectedResult
+                        ?.split(/(?=\d+\.)/)
+                        .map((result, index) => (
+                          <p key={index}>{result.trim()}</p>
+                        ))}
                     </div>
                   </div>
                 </div>
@@ -285,16 +328,23 @@ const TestCaseDetail: React.FC = () => {
             <div>
               <div className="flex items-center mb-4">
                 <History className="h-5 w-5 text-gray-400 mr-2" />
-                <h3 className="text-lg font-medium text-gray-900">Change History</h3>
+                <h3 className="text-lg font-medium text-gray-900">
+                  Change History
+                </h3>
               </div>
               <ul className="space-y-4">
                 {history.map((activityLogs: any) =>
                   activityLogs.map((log: any) => (
-                    <li key={log._id} className="relative pl-5 pb-4 border-l-2 border-gray-200">
+                    <li
+                      key={log._id}
+                      className="relative pl-5 pb-4 border-l-2 border-gray-200"
+                    >
                       <div className="absolute w-3 h-3 bg-primary-500 rounded-full -left-[7px] top-1.5"></div>
                       <div className="flex justify-between items-start">
                         <div>
-                          <p className="font-medium text-gray-900 truncate max-w-full">{log.message}</p>
+                          <p className="font-medium text-gray-900 truncate max-w-full">
+                            {log.message}
+                          </p>
                         </div>
                         <span className="text-sm text-gray-500">
                           {new Date(log.createdAt).toLocaleString("en-US", {
