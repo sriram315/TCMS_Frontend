@@ -138,12 +138,14 @@ export default function TestRunForm({ selected }: TestRunFormProps) {
   }, [selected]);
 
   const fetchTestCaseIdsByModule = async (
-    module: string
+    module: string,
+    projectId: string
   ): Promise<string[]> => {
     try {
       const { data } = await axios.get(`${API_URL}/testcases`);
       const testCases = data.filter(
-        (testCase: TestCase) => testCase.module === module
+        (testCase: TestCase) =>
+          testCase.module === module && testCase.projectId === projectId
       );
       return testCases
         .map((testCase: TestCase) => testCase._id)
@@ -160,8 +162,10 @@ export default function TestRunForm({ selected }: TestRunFormProps) {
     { resetForm, setSubmitting }: FormikHelpers<TestCase>
   ) => {
     try {
-      const testCaseIds = await fetchTestCaseIdsByModule(values.module || "");
-
+      const testCaseIds = await fetchTestCaseIdsByModule(
+        values.module || "",
+        values.projectId || ""
+      );
 
       const res = await axios.post(
         `${API_URL}/test-runs`,

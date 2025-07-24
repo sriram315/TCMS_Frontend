@@ -1,5 +1,12 @@
 import { useState, useEffect } from "react";
-import { Formik, Form, Field, ErrorMessage, FormikHelpers } from "formik";
+import {
+  Formik,
+  Form,
+  Field,
+  ErrorMessage,
+  FormikHelpers,
+  FieldArray,
+} from "formik";
 import * as Yup from "yup";
 import { toast, ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
@@ -7,6 +14,7 @@ import axios from "axios"; // Import axios for making HTTP requests
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../../../context/AuthContext";
 import { API_URL } from "../../../config";
+import Checkbox from "../../common/Checkbox";
 
 // Define the TestCase interface (consistent with TestCaseGrid.tsx)
 interface TestCase {
@@ -14,7 +22,7 @@ interface TestCase {
   // testCaseId: string;
   name: string;
   description: string;
-  assignedTo: string;
+  assignedTo: string[];
 }
 
 // Define component props
@@ -28,7 +36,7 @@ const initialState: TestCase = {
   // testCaseId: "",
   name: "",
   description: "",
-  assignedTo: "",
+  assignedTo: [],
 };
 
 // Define validation schema
@@ -37,11 +45,17 @@ const validationSchema = Yup.object({
   //   .required("Test Case ID is required")
   //   .min(3, "Test Case ID must be at least 3 characters"),
   name: Yup.string().required("Name is required"),
-  description: Yup.string().required("Description is required").min(10, "Description must be at least 10 characters"),
-  assignedTo: Yup.string().required("Assigned to is required").notOneOf([""], "Please select a user"),
+  description: Yup.string()
+    .required("Description is required")
+    .min(10, "Description must be at least 10 characters"),
+  assignedTo: Yup.array()
+    .min(1, "At least one user must be selected")
+    .of(Yup.string().required()),
 });
 
-export default function ProjectForm({ selected }: Omit<ProjectFormProps, "onSave">) {
+export default function ProjectForm({
+  selected,
+}: Omit<ProjectFormProps, "onSave">) {
   const [initialValues, setInitialValues] = useState<TestCase>(initialState);
   const [users, setUsers] = useState<any>([]);
   const [isLoading, setIsLoading] = useState<boolean>(false);
@@ -82,7 +96,10 @@ export default function ProjectForm({ selected }: Omit<ProjectFormProps, "onSave
     fetchUser();
   }, []);
   const token = sessionStorage.getItem("token");
-  const handleSubmit = async (values: TestCase, { resetForm, setSubmitting }: FormikHelpers<TestCase>) => {
+  const handleSubmit = async (
+    values: TestCase,
+    { resetForm, setSubmitting }: FormikHelpers<TestCase>
+  ) => {
     try {
       setIsLoading(true);
       const response = await axios.post(
@@ -142,7 +159,9 @@ export default function ProjectForm({ selected }: Omit<ProjectFormProps, "onSave
         theme="light"
       />
       <div className="w-full bg-white p-10 rounded-lg">
-        <h2 className="text-xl sm:text-2xl font-semibold text-gray-800 mb-6">Add Project</h2>
+        <h2 className="text-xl sm:text-2xl font-semibold text-gray-800 mb-6">
+          Add Project
+        </h2>
         <Formik
           initialValues={initialValues}
           validationSchema={validationSchema}
@@ -156,7 +175,10 @@ export default function ProjectForm({ selected }: Omit<ProjectFormProps, "onSave
                 { label: "Description", name: "description", type: "textarea" },
               ].map((field) => (
                 <div key={field.name} className="flex flex-col">
-                  <label htmlFor={field.name} className="block text-sm font-medium text-gray-700 mb-1">
+                  <label
+                    htmlFor={field.name}
+                    className="block text-sm font-medium text-gray-700 mb-1"
+                  >
                     {field.label}
                   </label>
                   <Field
@@ -165,19 +187,27 @@ export default function ProjectForm({ selected }: Omit<ProjectFormProps, "onSave
                     name={field.name}
                     maxLength={field.length}
                     className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-1 focus:ring-indigo-500 focus:border-indigo-500 text-gray-700 ${
-                      errors[field.name as keyof TestCase] && touched[field.name as keyof TestCase]
+                      errors[field.name as keyof TestCase] &&
+                      touched[field.name as keyof TestCase]
                         ? "border-red-500"
                         : "border-gray-300"
                     }`}
                     rows={field.type === "textarea" ? 2 : undefined}
                   />
-                  <ErrorMessage name={field.name} component="div" className="text-red-500 text-xs mt-1" />
+                  <ErrorMessage
+                    name={field.name}
+                    component="div"
+                    className="text-red-500 text-xs mt-1"
+                  />
                 </div>
               ))}
 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
-                  <label htmlFor="type" className="block text-sm font-medium text-gray-700 mb-1">
+                  <label
+                    htmlFor="type"
+                    className="block text-sm font-medium text-gray-700 mb-1"
+                  >
                     Type
                   </label>
                   <Field
@@ -185,7 +215,8 @@ export default function ProjectForm({ selected }: Omit<ProjectFormProps, "onSave
                     id="type"
                     name="type"
                     className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-1 focus:ring-indigo-500 focus:border-indigo-500 text-gray-700 ${
-                      errors["type" as keyof TestCase] && touched["type" as keyof TestCase]
+                      errors["type" as keyof TestCase] &&
+                      touched["type" as keyof TestCase]
                         ? "border-red-500"
                         : "border-gray-300"
                     }`}
@@ -194,10 +225,17 @@ export default function ProjectForm({ selected }: Omit<ProjectFormProps, "onSave
                     <option value="Automation">Automation</option>
                     <option value="Both">Both</option>
                   </Field>
-                  <ErrorMessage name="type" component="div" className="text-red-500 text-xs mt-1" />
+                  <ErrorMessage
+                    name="type"
+                    component="div"
+                    className="text-red-500 text-xs mt-1"
+                  />
                 </div>
-                <div>
-                  <label htmlFor="assignedTo" className="block text-sm font-medium text-gray-700 mb-1">
+                {/* <div>
+                  <label
+                    htmlFor="assignedTo"
+                    className="block text-sm font-medium text-gray-700 mb-1"
+                  >
                     Assigned to
                   </label>
                   <Field
@@ -205,7 +243,8 @@ export default function ProjectForm({ selected }: Omit<ProjectFormProps, "onSave
                     id="assignedTo"
                     name="assignedTo"
                     className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-1 focus:ring-indigo-500 focus:border-indigo-500 text-gray-700 ${
-                      errors["assignedTo" as keyof TestCase] && touched["assignedTo" as keyof TestCase]
+                      errors["assignedTo" as keyof TestCase] &&
+                      touched["assignedTo" as keyof TestCase]
                         ? "border-red-500"
                         : "border-gray-300"
                     }`}
@@ -217,8 +256,71 @@ export default function ProjectForm({ selected }: Omit<ProjectFormProps, "onSave
                       </option>
                     ))}
                   </Field>
-                  <ErrorMessage name="assignedTo" component="div" className="text-red-500 text-xs mt-1" />
-                </div>
+                  <ErrorMessage
+                    name="assignedTo"
+                    component="div"
+                    className="text-red-500 text-xs mt-1"
+                  />
+                </div> */}
+              </div>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <FieldArray name="assignedTo">
+                  {({ push, remove, form }) => (
+                    <fieldset>
+                      <legend className="block text-sm font-medium text-gray-700 mb-1">
+                        Assign to
+                      </legend>
+                      <div className="mt-4 divide-y divide-gray-200 border-b border-t border-gray-200 overflow-y-auto h-52 px-2">
+                        {users.map((user: any, index: number) => {
+                          const isChecked = form.values.assignedTo.includes(
+                            user._id
+                          );
+                          return (
+                            <div
+                              key={user._id}
+                              className="relative flex gap-3 py-4"
+                            >
+                              <div className="min-w-0 flex-1 text-sm/6">
+                                <label
+                                  htmlFor={`assignedTo-${user._id}`}
+                                  className="font-medium text-gray-900 select-none"
+                                >
+                                  {user.name}
+                                </label>
+                              </div>
+                              <div className="flex h-6 shrink-0 items-center">
+                                <input
+                                  type="checkbox"
+                                  id={`assignedTo-${user._id}`}
+                                  name="assignedTo"
+                                  value={user._id}
+                                  checked={isChecked}
+                                  onChange={() => {
+                                    if (isChecked) {
+                                      const idx =
+                                        form.values.assignedTo.indexOf(
+                                          user._id
+                                        );
+                                      remove(idx);
+                                    } else {
+                                      push(user._id);
+                                    }
+                                  }}
+                                  className="size-4 rounded border border-gray-300 text-indigo-600 focus:ring-indigo-500"
+                                />
+                              </div>
+                            </div>
+                          );
+                        })}
+                      </div>
+                      <ErrorMessage
+                        name="assignedTo"
+                        component="div"
+                        className="text-red-500 text-xs mt-1"
+                      />
+                    </fieldset>
+                  )}
+                </FieldArray>
               </div>
 
               <div className="flex justify-end pt-4">
