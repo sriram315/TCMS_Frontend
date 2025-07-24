@@ -58,7 +58,7 @@ pipeline {
                 ]]) {
                     script {
                         sh "aws eks update-kubeconfig --region ${AWS_DEFAULT_REGION} --name tcms-eks"
-                        sh "kubectl delete deployment tcms-frontend-app-deployment -n tcms || true"
+                        sh "kubectl delete deployment tcms-frontend-app-deployment -n dev || true"
                         sh "sleep 30"
                         sh "kubectl apply -f tcms-frontend.yaml"
                     }
