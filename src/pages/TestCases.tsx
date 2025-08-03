@@ -150,16 +150,16 @@ const TestCases: React.FC = () => {
   };
 
   const handleUpload = async () => {
-    if (!uploadFile || !uploadProjectId || !moduleName || !email) {
+    if (!uploadFile || !uploadProjectId || !email) {
       setUploadError(
-        "Please select a file, project, enter a module name, and ensure you are logged in"
+        "Please select a file, project, and ensure you are logged in"
       );
       return;
     }
 
     const formData = new FormData();
     formData.append("file", uploadFile);
-    formData.append("module", moduleName);
+    // formData.append("module", moduleName);
     formData.append("projectId", uploadProjectId);
     formData.append("createdBy", email);
 
@@ -177,7 +177,7 @@ const TestCases: React.FC = () => {
       setShowUploadModal(false);
       setUploadFile(null);
       setUploadProjectId("");
-      setModuleName("");
+      // setModuleName("");
       fetchData();
     } catch (error) {
       setUploadError(
@@ -257,7 +257,7 @@ const TestCases: React.FC = () => {
             {!String(role).toLowerCase().includes("admin") && (
               <button
                 type="button"
-                className="btn btn-outline mr-3 h-8 mt-2"
+                className="btn btn-outline mx-3 h-8 mt-2"
                 onClick={() => setShowUploadModal(true)}
               >
                 <Upload className="h-3 w-3 mr-2" />
@@ -301,7 +301,7 @@ const TestCases: React.FC = () => {
                 className="mt-1 block w-full border border-gray-300 rounded-md p-2"
               />
               {uploadFile && (
-                <p className="mt-1 text-sm text-gray-600">
+                <p className="mt-1 text-sm text-gray-600 truncate">
                   Selected: {uploadFile.name}
                 </p>
               )}
@@ -323,7 +323,7 @@ const TestCases: React.FC = () => {
                 ))}
               </select>
             </div>
-            <div className="mb-4">
+            {/* <div className="mb-4">
               <label className="block text-sm font-medium text-gray-700">
                 Module Name
               </label>
@@ -334,7 +334,7 @@ const TestCases: React.FC = () => {
                 className="mt-1 block w-full border border-gray-300 rounded-md p-2 focus:outline-indigo-700"
                 placeholder="Enter module name"
               />
-            </div>
+            </div> */}
             <div className="flex justify-end gap-2">
               <button
                 disabled={isUploading}
@@ -344,7 +344,7 @@ const TestCases: React.FC = () => {
                   setUploadError(null);
                   setUploadFile(null);
                   setUploadProjectId("");
-                  setModuleName("");
+                  // setModuleName("");
                 }}
               >
                 Cancel
