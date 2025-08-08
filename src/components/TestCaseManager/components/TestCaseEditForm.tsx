@@ -6,6 +6,7 @@ import "react-toastify/dist/ReactToastify.css";
 import axios from "axios";
 import { useLocation, useNavigate } from "react-router-dom";
 import { API_URL } from "../../../config";
+import { ChevronLeft } from "lucide-react";
 
 // Define the TestCase interface (consistent with TestCaseGrid.tsx)
 interface TestCase {
@@ -97,16 +98,6 @@ export default function TestCaseEditForm() {
       });
   }, []);
 
-  useEffect(() => {
-    const fetchMail = async () => {
-      try {
-        await axios.get(`${API_URL}/users`);
-      } catch (error) {
-        console.log(error);
-      }
-    };
-    fetchMail();
-  }, []);
   const navigate = useNavigate();
   const token = sessionStorage.getItem("token") || ""; // Replace with your actual token retrieval method
 
@@ -161,231 +152,244 @@ export default function TestCaseEditForm() {
   };
 
   return (
-    <div className="relative w-full max-w-4xl mx-auto mt-6 px-4 sm:px-6 lg:px-8">
-      <ToastContainer
-        position="top-right"
-        autoClose={3000}
-        hideProgressBar={false}
-        newestOnTop
-        closeOnClick
-        rtl={false}
-        pauseOnFocusLoss
-        draggable
-        pauseOnHover
-        theme="light"
-      />
-      <div className="w-full bg-white p-10 rounded-lg">
-        <h2 className="text-xl sm:text-2xl font-semibold text-gray-800 mb-6">
-          Edit Test Case
-        </h2>
-        <Formik
-          initialValues={initialValues}
-          validationSchema={validationSchema}
-          onSubmit={handleSubmit}
-          enableReinitialize
-        >
-          {({ errors, touched, dirty }) => (
-            <Form className="space-y-4 sm:space-y-5">
-              {[
-                { label: "Title", name: "title" },
-                { label: "Module", name: "module", disabled: true },
-                {
-                  label: "Pre-Conditions",
-                  name: "preRequisite",
-                  type: "textarea",
-                },
-                { label: "Description", name: "description", type: "textarea" },
-                // { label: "Type", name: "type" },
-                { label: "Steps", name: "steps", type: "textarea" },
-                {
-                  label: "Expected Result",
-                  name: "expectedResult",
-                  type: "textarea",
-                },
-                {
-                  label: "User story ID",
-                  name: "userStory",
-                  length: 20,
-                },
-              ].map((field) => (
-                <div key={field.name} className="flex flex-col">
-                  <label
-                    htmlFor={field.name}
-                    className="block text-sm font-medium text-gray-700 mb-1"
-                  >
-                    {field.label}
-                  </label>
-                  <Field
-                    as={field.type === "textarea" ? "textarea" : "input"}
-                    id={field.name}
-                    name={field.name}
-                    disabled={field.disabled}
-                    className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-1 focus:ring-indigo-500 focus:border-indigo-500 text-gray-700 ${
-                      errors[field.name as keyof TestCase] &&
-                      touched[field.name as keyof TestCase]
-                        ? "border-red-500"
-                        : "border-gray-300"
-                    }`}
-                    rows={field.type === "textarea" ? 2 : undefined}
-                  />
-                  <ErrorMessage
-                    name={field.name}
-                    component="div"
-                    className="text-red-500 text-xs mt-1"
-                  />
-                </div>
-              ))}
+    <div>
+      {" "}
+      <div
+        className="inline-flex justify-center items-center text-lg font-medium text-gray-900 cursor-pointer"
+        onClick={() => navigate(-1)}
+      >
+        <ChevronLeft className="h-8 w-8 text-black" /> Back
+      </div>
+      <div className="relative w-full max-w-4xl mx-auto mt-6 px-4 sm:px-6 lg:px-8">
+        <ToastContainer
+          position="top-right"
+          autoClose={3000}
+          hideProgressBar={false}
+          newestOnTop
+          closeOnClick
+          rtl={false}
+          pauseOnFocusLoss
+          draggable
+          pauseOnHover
+          theme="light"
+        />
+        <div className="w-full bg-white p-10 rounded-lg">
+          <h2 className="text-xl sm:text-2xl font-semibold text-gray-800 mb-6">
+            Edit Test Case
+          </h2>
+          <Formik
+            initialValues={initialValues}
+            validationSchema={validationSchema}
+            onSubmit={handleSubmit}
+            enableReinitialize
+          >
+            {({ errors, touched, dirty }) => (
+              <Form className="space-y-4 sm:space-y-5">
+                {[
+                  { label: "Title", name: "title" },
+                  { label: "Module", name: "module", disabled: true },
+                  {
+                    label: "Pre-Conditions",
+                    name: "preRequisite",
+                    type: "textarea",
+                  },
+                  {
+                    label: "Description",
+                    name: "description",
+                    type: "textarea",
+                  },
+                  // { label: "Type", name: "type" },
+                  { label: "Steps", name: "steps", type: "textarea" },
+                  {
+                    label: "Expected Result",
+                    name: "expectedResult",
+                    type: "textarea",
+                  },
+                  {
+                    label: "User story ID",
+                    name: "userStory",
+                    length: 20,
+                  },
+                ].map((field) => (
+                  <div key={field.name} className="flex flex-col">
+                    <label
+                      htmlFor={field.name}
+                      className="block text-sm font-medium text-gray-700 mb-1"
+                    >
+                      {field.label}
+                    </label>
+                    <Field
+                      as={field.type === "textarea" ? "textarea" : "input"}
+                      id={field.name}
+                      name={field.name}
+                      disabled={field.disabled}
+                      className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-1 focus:ring-indigo-500 focus:border-indigo-500 text-gray-700 ${
+                        errors[field.name as keyof TestCase] &&
+                        touched[field.name as keyof TestCase]
+                          ? "border-red-500"
+                          : "border-gray-300"
+                      }`}
+                      rows={field.type === "textarea" ? 2 : undefined}
+                    />
+                    <ErrorMessage
+                      name={field.name}
+                      component="div"
+                      className="text-red-500 text-xs mt-1"
+                    />
+                  </div>
+                ))}
 
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <div>
-                  <label
-                    htmlFor="type"
-                    className="block text-sm font-medium text-gray-700 mb-1"
-                  >
-                    Type
-                  </label>
-                  <Field
-                    as="select"
-                    id="type"
-                    name="type"
-                    className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-1 focus:ring-indigo-500 focus:border-indigo-500 text-gray-700 ${
-                      errors.type && touched.type
-                        ? "border-red-500"
-                        : "border-gray-300"
-                    }`}
-                  >
-                    <option value="functional">Functional</option>
-                    <option value="performance">Performance</option>
-                    <option value="regression">Regression</option>
-                    <option value="security">Security</option>
-                    <option value="smoke & sanity">Smoke & Sanity</option>
-                    <option value="usability">Usability</option>
-                    <option value="acceptance">Acceptance</option>
-                    <option value="accessibility">Accessibility</option>
-                    <option value="automated">Automated</option>
-                    <option value="compatibility">Compatibility</option>
-                    <option value="destructive">Destructive</option>
-                    <option value="others">Others</option>
-                  </Field>
-                  <ErrorMessage
-                    name="type"
-                    component="div"
-                    className="text-red-500 text-xs mt-1"
-                  />
-                </div>
-                <div>
-                  <label
-                    htmlFor="priority"
-                    className="block text-sm font-medium text-gray-700 mb-1"
-                  >
-                    Priority
-                  </label>
-                  <Field
-                    as="select"
-                    id="priority"
-                    name="priority"
-                    className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-1 focus:ring-indigo-500 focus:border-indigo-500 text-gray-700 ${
-                      errors.priority && touched.priority
-                        ? "border-red-500"
-                        : "border-gray-300"
-                    }`}
-                  >
-                    <option value="Low">Low</option>
-                    <option value="Medium">Medium</option>
-                    <option value="High">High</option>
-                  </Field>
-                  <ErrorMessage
-                    name="priority"
-                    component="div"
-                    className="text-red-500 text-xs mt-1"
-                  />
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <div>
+                    <label
+                      htmlFor="type"
+                      className="block text-sm font-medium text-gray-700 mb-1"
+                    >
+                      Type
+                    </label>
+                    <Field
+                      as="select"
+                      id="type"
+                      name="type"
+                      className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-1 focus:ring-indigo-500 focus:border-indigo-500 text-gray-700 ${
+                        errors.type && touched.type
+                          ? "border-red-500"
+                          : "border-gray-300"
+                      }`}
+                    >
+                      <option value="functional">Functional</option>
+                      <option value="performance">Performance</option>
+                      <option value="regression">Regression</option>
+                      <option value="security">Security</option>
+                      <option value="smoke & sanity">Smoke & Sanity</option>
+                      <option value="usability">Usability</option>
+                      <option value="acceptance">Acceptance</option>
+                      <option value="accessibility">Accessibility</option>
+                      <option value="automated">Automated</option>
+                      <option value="compatibility">Compatibility</option>
+                      <option value="destructive">Destructive</option>
+                      <option value="others">Others</option>
+                    </Field>
+                    <ErrorMessage
+                      name="type"
+                      component="div"
+                      className="text-red-500 text-xs mt-1"
+                    />
+                  </div>
+                  <div>
+                    <label
+                      htmlFor="priority"
+                      className="block text-sm font-medium text-gray-700 mb-1"
+                    >
+                      Priority
+                    </label>
+                    <Field
+                      as="select"
+                      id="priority"
+                      name="priority"
+                      className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-1 focus:ring-indigo-500 focus:border-indigo-500 text-gray-700 ${
+                        errors.priority && touched.priority
+                          ? "border-red-500"
+                          : "border-gray-300"
+                      }`}
+                    >
+                      <option value="Low">Low</option>
+                      <option value="Medium">Medium</option>
+                      <option value="High">High</option>
+                    </Field>
+                    <ErrorMessage
+                      name="priority"
+                      component="div"
+                      className="text-red-500 text-xs mt-1"
+                    />
+                  </div>
+
+                  <div>
+                    <label
+                      htmlFor="automationStatus"
+                      className="block text-sm font-medium text-gray-700 mb-1"
+                    >
+                      Automation Status
+                    </label>
+                    <Field
+                      as="select"
+                      id="automationStatus"
+                      name="automationStatus"
+                      className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-1 focus:ring-indigo-500 focus:border-indigo-500 text-gray-700 ${
+                        errors.automationStatus && touched.automationStatus
+                          ? "border-red-500"
+                          : "border-gray-300"
+                      }`}
+                    >
+                      <option value="Yes">Yes</option>
+                      <option value="No">No</option>
+                    </Field>
+                    <ErrorMessage
+                      name="automationStatus"
+                      component="div"
+                      className="text-red-500 text-xs mt-1"
+                    />
+                  </div>
+                  <div>
+                    <label
+                      htmlFor="projectId"
+                      className="block text-sm font-medium text-gray-700 mb-1"
+                    >
+                      Select Project
+                    </label>
+                    <Field
+                      as="select"
+                      id="projectId"
+                      name="projectId"
+                      className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-1 focus:ring-indigo-500 focus:border-indigo-500 text-gray-700 ${
+                        errors["projectId" as keyof TestCase] &&
+                        touched["projectId" as keyof TestCase]
+                          ? "border-red-500"
+                          : "border-gray-300"
+                      }`}
+                    >
+                      <option value={initialState.projectId}>
+                        {
+                          projects.filter(
+                            (project) => project._id === initialValues.projectId
+                          )?.[0]?.name
+                        }
+                      </option>
+                      {projects
+                        .filter((project) =>
+                          project?.assignedTo?.includes(userEmail)
+                        )
+                        .map((filteredProject, index) => (
+                          <option key={index} value={filteredProject._id}>
+                            {filteredProject.name}
+                          </option>
+                        ))}
+                    </Field>
+                    <ErrorMessage
+                      name="projectId"
+                      component="div"
+                      className="text-red-500 text-xs mt-1"
+                    />
+                  </div>
                 </div>
 
-                <div>
-                  <label
-                    htmlFor="automationStatus"
-                    className="block text-sm font-medium text-gray-700 mb-1"
+                <div className="flex justify-end pt-4">
+                  <button
+                    disabled={isLoading || !dirty}
+                    type="submit"
+                    className={`w-full sm:w-auto px-4 py-2 rounded-md focus:outline-none focus:ring-2 focus:ring-offset-2 transition-colors ${
+                      !dirty
+                        ? "bg-gray-400 cursor-not-allowed"
+                        : "bg-indigo-600 hover:bg-indigo-700 focus:ring-indigo-500"
+                    } text-white`}
                   >
-                    Automation Status
-                  </label>
-                  <Field
-                    as="select"
-                    id="automationStatus"
-                    name="automationStatus"
-                    className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-1 focus:ring-indigo-500 focus:border-indigo-500 text-gray-700 ${
-                      errors.automationStatus && touched.automationStatus
-                        ? "border-red-500"
-                        : "border-gray-300"
-                    }`}
-                  >
-                    <option value="Yes">Yes</option>
-                    <option value="No">No</option>
-                  </Field>
-                  <ErrorMessage
-                    name="automationStatus"
-                    component="div"
-                    className="text-red-500 text-xs mt-1"
-                  />
+                    Update Test Case
+                  </button>
                 </div>
-                <div>
-                  <label
-                    htmlFor="projectId"
-                    className="block text-sm font-medium text-gray-700 mb-1"
-                  >
-                    Select Project
-                  </label>
-                  <Field
-                    as="select"
-                    id="projectId"
-                    name="projectId"
-                    className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-1 focus:ring-indigo-500 focus:border-indigo-500 text-gray-700 ${
-                      errors["projectId" as keyof TestCase] &&
-                      touched["projectId" as keyof TestCase]
-                        ? "border-red-500"
-                        : "border-gray-300"
-                    }`}
-                  >
-                    <option value={initialState.projectId}>
-                      {
-                        projects.filter(
-                          (project) => project._id === initialValues.projectId
-                        )?.[0]?.name
-                      }
-                    </option>
-                    {projects
-                      .filter((project) =>
-                        project?.assignedTo?.includes(userEmail)
-                      )
-                      .map((filteredProject, index) => (
-                        <option key={index} value={filteredProject._id}>
-                          {filteredProject.name}
-                        </option>
-                      ))}
-                  </Field>
-                  <ErrorMessage
-                    name="projectId"
-                    component="div"
-                    className="text-red-500 text-xs mt-1"
-                  />
-                </div>
-              </div>
-
-              <div className="flex justify-end pt-4">
-                <button
-                  disabled={isLoading || !dirty}
-                  type="submit"
-                  className={`w-full sm:w-auto px-4 py-2 rounded-md focus:outline-none focus:ring-2 focus:ring-offset-2 transition-colors ${
-                    !dirty
-                      ? "bg-gray-400 cursor-not-allowed"
-                      : "bg-indigo-600 hover:bg-indigo-700 focus:ring-indigo-500"
-                  } text-white`}
-                >
-                  Update Test Case
-                </button>
-              </div>
-            </Form>
-          )}
-        </Formik>
+              </Form>
+            )}
+          </Formik>
+        </div>
       </div>
     </div>
   );

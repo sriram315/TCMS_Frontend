@@ -1,12 +1,12 @@
-import React, { useState, useEffect } from "react";
+import { useState, useEffect } from "react";
 import { Formik, Form, Field, ErrorMessage, FormikHelpers } from "formik";
 import * as Yup from "yup";
 import { toast, ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
-import { useAuth } from "../../../context/AuthContext";
 import { API_URL } from "../../../config";
+import { useGlobalContext } from "../../../context/GlobalContext";
 // Define the TestCase interface (consistent with TestCaseGrid.tsx)
 interface TestCase {
   _id?: string;
@@ -69,6 +69,7 @@ const validationSchema = Yup.object({
 });
 
 export default function TestCaseForm({ selected }: TestCaseFormProps) {
+  const { fetchTestCases } = useGlobalContext();
   const [initialValues, setInitialValues] = useState<TestCase>(initialState);
   const userId: string =
     JSON.parse(sessionStorage.getItem("user") || "{}")?._id || "";
@@ -96,6 +97,7 @@ export default function TestCaseForm({ selected }: TestCaseFormProps) {
           Authorization: `Bearer ${userToken}`,
         },
       });
+      fetchTestCases();
       toast.success("Test case saved successfully!", {
         position: "top-right",
         autoClose: 3000,
@@ -108,7 +110,16 @@ export default function TestCaseForm({ selected }: TestCaseFormProps) {
       setTimeout(() => {
         navigate("/test-cases");
       }, 1000);
-    } catch (error) {
+    } catch (error: any) {
+      toast.error(error?.response?.data?.message, {
+        position: "top-right",
+        autoClose: 3000,
+        hideProgressBar: false,
+        closeOnClick: true,
+        pauseOnHover: true,
+        draggable: true,
+        progress: undefined,
+      });
       // Handle error (e.g., show error message)
       console.error("Error creating test case:", error);
     }
@@ -134,17 +145,7 @@ export default function TestCaseForm({ selected }: TestCaseFormProps) {
       setInitialValues(initialState);
     }
   }, [selected]);
-  useEffect(() => {
-    const fetchMail = async () => {
-      try {
-        const response = await axios.get(`${API_URL}/users`);
-        console.log(response);
-      } catch (error) {
-        console.log(error);
-      }
-    };
-    fetchMail();
-  }, []);
+
   const user = JSON.parse(sessionStorage.getItem("user") || "{}");
 
   const handleSubmit = async (
@@ -273,8 +274,8 @@ export default function TestCaseForm({ selected }: TestCaseFormProps) {
                         : "border-gray-300"
                     }`}
                   >
-                    <option value="functional">Positive</option>
-                    <option value="functional">Negative</option>
+                    <option value="positive">Positive</option>
+                    <option value="negative">Negative</option>
                     <option value="functional">Functional</option>
                     <option value="performance">Performance</option>
                     <option value="regression">Regression</option>

@@ -2,11 +2,12 @@ import React, { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import PageHeader from "../components/common/PageHeader";
 import { useLocation } from "react-router-dom";
-import { Edit, History } from "lucide-react";
+import { ChevronLeft, Edit, History, MinusCircle } from "lucide-react";
 import StatusBadge from "../components/common/StatusBadge";
 import axios from "axios";
 import { format } from "date-fns";
 import { API_URL } from "../config";
+import { toast, ToastContainer } from "react-toastify";
 
 interface TestCase {
   _id: string;
@@ -89,6 +90,42 @@ const TestCaseDetail: React.FC = () => {
       },
     });
   };
+  const token = sessionStorage.getItem("token") || ""; // Replace with your actual token retrieval method
+
+  const handleDelete = async () => {
+    try {
+      const res = await axios.delete(
+        `${API_URL}/testcases/${testCaseData._id}`,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`, // replace `token` with your actual token variable
+          },
+        }
+      );
+      toast.success("Test case deleted successfully!", {
+        position: "top-right",
+        autoClose: 2000,
+        hideProgressBar: false,
+        closeOnClick: true,
+        pauseOnHover: true,
+        draggable: true,
+        progress: undefined,
+      });
+      setTimeout(() => {
+        navigate("/test-cases");
+      }, 2000);
+    } catch (error) {
+      toast.error("Failed to delete test case. Please try again.", {
+        position: "top-right",
+        autoClose: 3000,
+        hideProgressBar: false,
+        closeOnClick: true,
+        pauseOnHover: true,
+        draggable: true,
+        progress: undefined,
+      });
+    }
+  };
   const fetchTestCase = () => {
     axios
       .get(`${API_URL}/testcases`)
@@ -103,7 +140,12 @@ const TestCaseDetail: React.FC = () => {
         }));
 
         const activityHistory = response.data
-          .filter((testId: any) => testId.testCaseId === id)
+          .filter(
+            (testId: any) =>
+              testId.testCaseId === id &&
+              testId.projectId === testCaseData.projectId &&
+              testId.module === testCaseData.module
+          )
           .map((completedTestData: any) => completedTestData?.activityLogs)
           .map((log: any) => log);
 
@@ -151,6 +193,19 @@ const TestCaseDetail: React.FC = () => {
 
   return (
     <div>
+      <ToastContainer
+        position="top-right"
+        autoClose={3000}
+        hideProgressBar={false}
+        newestOnTop
+        closeOnClick
+        rtl={false}
+        pauseOnFocusLoss
+        draggable
+        pauseOnHover
+        theme="light"
+      />
+
       <PageHeader
         title={`${testCase.testCaseId}: ${testCase.title}`}
         actions={
@@ -158,17 +213,28 @@ const TestCaseDetail: React.FC = () => {
             {!isTestRunDetailUrl &&
               String(userRole).toLowerCase() !== "admin" &&
               String(userRole).toLowerCase() !== "superadmin" && (
-                <button
-                  type="button"
-                  onClick={handleEdit}
-                  className="btn btn-outline mr-2"
-                >
-                  <Edit className="h-4 w-4 mr-1" />
-                  Edit
-                </button>
+                <div className="flex items-center">
+                  <button
+                    type="button"
+                    onClick={handleEdit}
+                    className="btn btn-outline mr-2"
+                  >
+                    <Edit className="h-4 w-4 mr-1" />
+                    Edit
+                  </button>
+                  <button
+                    type="button"
+                    onClick={handleDelete}
+                    className="btn btn-outline mr-2"
+                  >
+                    <MinusCircle className="h-4 w-4 mr-1" />
+                    Delete
+                  </button>
+                </div>
               )}
           </div>
         }
+        backNav={true}
       />
 
       <div className="bg-white shadow-sm rounded-lg border border-gray-200 overflow-hidden mb-6">
@@ -332,9 +398,15 @@ const TestCaseDetail: React.FC = () => {
                   Change History
                 </h3>
               </div>
-              <ul className="space-y-4">
-                {history.map((activityLogs: any) =>
-                  activityLogs.map((log: any) => (
+              <ul className="space-y-4 overflow-x-auto px-4">
+                {history
+                  .flat()
+                  .sort((a: { updatedAt: any }, b: { updatedAt: any }) => {
+                    const dateA = new Date(a.updatedAt || "");
+                    const dateB = new Date(b.updatedAt || "");
+                    return dateA.getTime() - dateB.getTime();
+                  })
+                  .map((log: any) => (
                     <li
                       key={log._id}
                       className="relative pl-5 pb-4 border-l-2 border-gray-200"
@@ -346,7 +418,7 @@ const TestCaseDetail: React.FC = () => {
                             {log.message}
                           </p>
                         </div>
-                        <span className="text-sm text-gray-500">
+                        <span className="text-sm text-gray-500 whitespace-nowrap">
                           {new Date(log.createdAt).toLocaleString("en-US", {
                             year: "numeric",
                             month: "short",
@@ -357,8 +429,7 @@ const TestCaseDetail: React.FC = () => {
                         </span>
                       </div>
                     </li>
-                  ))
-                )}
+                  ))}
               </ul>
             </div>
           )}

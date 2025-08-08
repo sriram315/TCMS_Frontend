@@ -9,6 +9,7 @@ import "react-datepicker/dist/react-datepicker.css";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../../../context/AuthContext";
 import { API_URL } from "../../../config";
+import { useGlobalContext } from "../../../context/GlobalContext";
 
 interface TestCase {
   _id?: string;
@@ -49,6 +50,8 @@ const validationSchema = Yup.object({
 });
 
 export default function TestRunForm({ selected }: TestRunFormProps) {
+  const { state } = useGlobalContext();
+  const { testCases: globalTestCases, projects: globalProjects } = state;
   const [initialValues, setInitialValues] = useState<TestCase>(initialState);
   const [users, setUsers] = useState([]);
   const [filteredModules, setFilteredModules] = useState([]);
@@ -81,25 +84,19 @@ export default function TestRunForm({ selected }: TestRunFormProps) {
   };
 
   const fetchProjects = async () => {
-    try {
-      const { data } = await axios.get(`${API_URL}/projects`);
+    const filteredProjects =
+      currentUser?.role.toLowerCase() === "admin"
+        ? globalProjects.filter(
+            (project: any) => project?.createdBy?._id === currentUser?._id
+          )
+        : [];
 
-      const filteredProjects =
-        currentUser?.role.toLowerCase() === "admin"
-          ? data.filter(
-              (project: any) => project?.createdBy?._id === currentUser?._id
-            )
-          : [];
-
-      setProjects(filteredProjects);
-    } catch (error) {
-      console.error("Error fetching projects:", error);
-    }
+    setProjects(filteredProjects);
   };
   useEffect(() => {
     fetchUsers();
     fetchProjects();
-  }, []);
+  }, [globalProjects]);
 
   const fetchModules = async (projectId: string) => {
     if (!projectId) {
@@ -108,8 +105,7 @@ export default function TestRunForm({ selected }: TestRunFormProps) {
     }
 
     try {
-      const { data } = await axios.get(`${API_URL}/testcases`);
-      const projectTestCases = data.filter(
+      const projectTestCases = globalTestCases.filter(
         (testCase: TestCase) => testCase.projectId === projectId
       );
       const modules = projectTestCases.map(
@@ -142,8 +138,7 @@ export default function TestRunForm({ selected }: TestRunFormProps) {
     projectId: string
   ): Promise<string[]> => {
     try {
-      const { data } = await axios.get(`${API_URL}/testcases`);
-      const testCases = data.filter(
+      const testCases = globalTestCases.filter(
         (testCase: TestCase) =>
           testCase.module === module && testCase.projectId === projectId
       );
@@ -228,7 +223,7 @@ export default function TestRunForm({ selected }: TestRunFormProps) {
       return;
     }
 
-    const selectedProject = projects.find(
+    const selectedProject = globalProjects.find(
       (project: any) => project._id === projectId
     );
     if (!selectedProject || !selectedProject.assignedTo) {
@@ -330,7 +325,7 @@ export default function TestRunForm({ selected }: TestRunFormProps) {
                     }}
                   >
                     <option value="">Select Project</option>
-                    {projects?.map((project: any) => (
+                    {globalProjects?.map((project: any) => (
                       <option key={project._id} value={project._id}>
                         {project.name}
                       </option>

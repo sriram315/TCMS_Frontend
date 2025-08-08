@@ -10,6 +10,7 @@ import {
 } from "lucide-react";
 import { useAuth } from "../../context/AuthContext";
 import TokenModal from "../TestCaseManager/TokenModal";
+import { useGlobalContext } from "../../context/GlobalContext";
 
 interface HeaderProps {
   openSidebar: () => void;
@@ -17,6 +18,8 @@ interface HeaderProps {
 
 const Header: React.FC<HeaderProps> = ({ openSidebar }) => {
   const { user, logout } = useAuth();
+  const { dispatch } = useGlobalContext();
+
   const [profileOpen, setProfileOpen] = useState(false);
   const [notificationsOpen, setNotificationsOpen] = useState(false);
   const [tokenModalOpen, setTokenModalOpen] = useState(false);
@@ -43,7 +46,6 @@ const Header: React.FC<HeaderProps> = ({ openSidebar }) => {
     document.addEventListener("mousedown", handleClickOutside);
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
-
 
   return (
     <>
@@ -134,6 +136,7 @@ const Header: React.FC<HeaderProps> = ({ openSidebar }) => {
                           setProfileOpen(false);
                           logout();
                           navigate("/login");
+                          dispatch({ type: "CLEAR_CONTEXT" });
                         }}
                       >
                         <LogOut className="mr-2 h-4 w-4" />
