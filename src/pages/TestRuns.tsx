@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from "react";
-import { Link, useLocation, useNavigate } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import PageHeader from "../components/common/PageHeader";
-import axios from "axios";
 import { format } from "date-fns";
 
 import {
@@ -13,7 +12,7 @@ import {
   CalendarClock,
   ChevronDownIcon,
 } from "lucide-react";
-import { API_URL } from "../config";
+import { useGlobalContext } from "../context/GlobalContext";
 
 const statusColors = {
   Completed: "bg-success-100 text-success-800 border-success-200",
@@ -77,69 +76,32 @@ const calculateTestRunStats = (testCases) => {
 };
 
 const TestRuns: React.FC = () => {
+  const { state } = useGlobalContext();
+  const { testRuns: globalTestRuns, projects: globalProjects } = state;
   const [searchQuery, setSearchQuery] = useState("");
   const [testRuns, setTestRuns] = useState([]);
   const [projects, setProjects] = useState<any[]>([]);
   const [selectedProjectId, setSelectedProjectId] = useState("All Projects");
   const [allTestRuns, setAllTestRuns] = useState([]);
   const navigate = useNavigate();
-  const location = useLocation();
 
   const user = JSON.parse(sessionStorage.getItem("user"));
-  const name = user.name;
   const role = user.role;
-  const userId = user._id;
 
   // Fetch projects based on user role
   useEffect(() => {
-    axios
-      .get(`${API_URL}/projects`)
-      .then((response) => {
-        // Filter projects based on user role
-        let userProjects = [];
-
-        if (String(role).toLowerCase() === "superadmin") {
-          // Superadmin sees all projects
-          userProjects = response.data;
-        } else if (String(role).toLowerCase() === "admin") {
-          // Admin sees only projects they created
-          userProjects = response.data.filter(
-            (project) => project.createdBy?._id === userId
-          );
-        } else {
-          // Other roles see only projects they're assigned to
-          userProjects = response.data.filter(
-            (project) =>
-              Array.isArray(project.assignedTo) &&
-              project.assignedTo.some((assignee) => assignee._id === userId)
-          );
-        }
-
-        setProjects(
-          userProjects.map((project) => ({
-            _id: project._id,
-            name: project.name,
-            assignedTo: project.assignedTo,
-          }))
-        );
-      })
-      .catch((error) => {
-        console.error("Error fetching projects:", error);
-      });
-  }, [userId, role]);
+    setProjects(
+      globalProjects.map((project) => ({
+        _id: project._id,
+        name: project.name,
+        assignedTo: project.assignedTo,
+      }))
+    );
+  }, [globalProjects]);
 
   const fetchTestRuns = async () => {
     try {
-      const { data } = await axios.get(`${API_URL}/test-runs`);
-
-      const filteredData =
-        String(role).toLowerCase() === "superadmin"
-          ? data
-          : String(role).toLowerCase() === "admin"
-          ? data.filter((testRun) => testRun?.createdBy?._id === userId)
-          : data.filter((testRun: any) => testRun?.assignedTo?._id === userId);
-
-      const processedTestRuns = filteredData.map((testRun, index) => {
+      const processedTestRuns = globalTestRuns.map((testRun, index) => {
         const { stats, progress, testRunStatus } = calculateTestRunStats(
           testRun.testCases || []
         );
@@ -204,6 +166,18 @@ const TestRuns: React.FC = () => {
         description="Execute and track test cases in your project"
         actions={
           <div className="flex items-center">
+            {/* <button
+          type="button"
+          className="btn btn-outline mx-3 h-8 mt-2"
+          onClick={() =>
+            downloadExcel({
+              [testRun.name]: testRun.testCases,
+            })
+          }
+        >
+          <DownloadIcon className="h-3 w-3 mr-2" />
+          Download Excel
+        </button> */}
             {projects?.length > 0 && (
               <div className="pr-5">
                 <div className="mt-2 grid grid-cols-1">

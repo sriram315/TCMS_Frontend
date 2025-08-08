@@ -1,0 +1,32 @@
+version: "3.8"
+
+services:
+  frontend:
+    build:
+      context: ./TCMS_Frontend
+    ports:
+      - "3000:3000"
+    volumes:
+      - ./TCMS_Frontend:/app
+    depends_on:
+      - backend
+
+  backend:
+    build:
+      context: ./TCMS_Backend
+    ports:
+      - "4000:4000"
+    volumes:
+      - ./TCMS_Backend:/app
+    depends_on:
+      - mongo
+
+  mongo:
+    image: mongo
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongo_data:/data/db
+
+volumes:
+  mongo_data:

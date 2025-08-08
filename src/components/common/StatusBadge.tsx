@@ -1,10 +1,5 @@
 import React, { useState } from "react";
-import {
-  CheckCircle,
-  XCircle,
-  AlertTriangle,
-  MinusCircle,
-} from "lucide-react";
+import { CheckCircle, XCircle, AlertTriangle, MinusCircle } from "lucide-react";
 import axios from "axios";
 import { API_URL } from "../../config";
 
@@ -52,11 +47,6 @@ const STATUS_OPTIONS: Record<
     className: "status-badge-untested text-gray-400",
     text: "Untested",
   },
-  retest: {
-    icon: "symbol",
-    className: "",
-    text: ""
-  }
 };
 
 const StatusBadge: React.FC<StatusBadgeProps> = ({
@@ -85,9 +75,7 @@ const StatusBadge: React.FC<StatusBadgeProps> = ({
     try {
       // Replace with your actual endpoint
       const response = await axios.put(
-        url.length === 0
-          ? `${API_URL}/testcases/${testCaseId}`
-          : url,
+        url.length === 0 ? `${API_URL}/testcases/${testCaseId}` : url,
         {
           status: newStatus,
           updatedBy: user.name,

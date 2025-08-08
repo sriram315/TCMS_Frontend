@@ -3,7 +3,13 @@ import { Link, useLocation } from "react-router-dom";
 import axios from "axios";
 import { format } from "date-fns";
 import { useAuth } from "../../../context/AuthContext";
-import { CheckCircle, XCircle, AlertTriangle, Clock, CalendarClock } from "lucide-react";
+import {
+  CheckCircle,
+  XCircle,
+  AlertTriangle,
+  Clock,
+  CalendarClock,
+} from "lucide-react";
 import Breadcrumbs from "../../common/Breadcrumbs";
 import PageHeader from "../../common/PageHeader";
 import { API_URL } from "../../../config";
@@ -47,15 +53,22 @@ const calculateTestRunStats = (testCases) => {
 
   // Calculate progress as the percentage of test cases that are not untested
   const completedTests = stats.passed + stats.failed + stats.blocked;
-  const progress = stats.total > 0 ? Math.round((completedTests / stats.total) * 100) : 0;
+  const progress =
+    stats.total > 0 ? Math.round((completedTests / stats.total) * 100) : 0;
 
   // Determine test run status based on test case counts
   let testRunStatus = "Not Started";
   if (stats.total === stats.untested) {
     testRunStatus = "Not Started";
-  } else if (stats.untested === 0 && stats.passed + stats.failed + stats.blocked === stats.total) {
+  } else if (
+    stats.untested === 0 &&
+    stats.passed + stats.failed + stats.blocked === stats.total
+  ) {
     testRunStatus = "Completed";
-  } else if (stats.untested < stats.total && (stats.passed > 0 || stats.failed > 0 || stats.blocked > 0)) {
+  } else if (
+    stats.untested < stats.total &&
+    (stats.passed > 0 || stats.failed > 0 || stats.blocked > 0)
+  ) {
     testRunStatus = "In Progress";
   }
 
@@ -67,18 +80,25 @@ const TestPlanRuns: React.FC = () => {
   const [users, setUsers] = useState<{ _id: string; name: string }[]>([]);
   const location = useLocation();
   const data = location.state;
+
   const { user: currentUser } = useAuth();
 
   useEffect(() => {
     const fetchTestRuns = async () => {
       try {
-        const response = await axios.get(`${API_URL}/test-plan/testPlanRun/${data._id}`);
+        const response = await axios.get(
+          `${API_URL}/test-plan/testPlanRun/${data._id}`
+        );
         const testRunsData = response.data.data;
         // Process the test runs data to include stats, progress, and assignee name
         const processedTestRuns = testRunsData.map((testRun) => {
-          const { stats, progress, testRunStatus } = calculateTestRunStats(testRun.module || []);
+          const { stats, progress, testRunStatus } = calculateTestRunStats(
+            testRun.module || []
+          );
           // Find the user name for the assignedTo ID
-          const assignee = users.find((user) => user._id === testRun.assignedTo);
+          const assignee = users.find(
+            (user) => user._id === testRun.assignedTo
+          );
           return {
             ...testRun,
             stats,
@@ -92,8 +112,11 @@ const TestPlanRuns: React.FC = () => {
             assigneeName: assignee ? assignee.name : "Unassigned",
           };
         });
-        const filteredRuns = processedTestRuns.filter((testRun) => testRun.assignedTo === currentUser?._id);
-        currentUser?.role?.toLowerCase() !== "admin" && currentUser?.role?.toLowerCase() !== "superadmin"
+        const filteredRuns = processedTestRuns.filter(
+          (testRun) => testRun.assignedTo === currentUser?._id
+        );
+        currentUser?.role?.toLowerCase() !== "admin" &&
+        currentUser?.role?.toLowerCase() !== "superadmin"
           ? setTestRuns(filteredRuns)
           : setTestRuns(processedTestRuns);
       } catch (error) {
@@ -127,7 +150,12 @@ const TestPlanRuns: React.FC = () => {
 
   return (
     <div>
-      <Breadcrumbs items={[{ label: "Test Plans", path: "/test-plans" }, { label: data.name }]} />
+      <Breadcrumbs
+        items={[
+          { label: "Test Plans", path: "/test-plans" },
+          { label: data.name },
+        ]}
+      />
 
       <PageHeader
         title={`${data.name} Test Runs`}
@@ -144,16 +172,21 @@ const TestPlanRuns: React.FC = () => {
                   <div className="flex items-center">
                     <h3 className="text-lg font-medium text-gray-900">
                       <Link
-                        state={JSON.parse(JSON.stringify(testRun))}
+                        state={JSON.parse(
+                          JSON.stringify({ testRun, projectName: data.name })
+                        )}
                         to={`/test-plans/test-runs/${testRun._id}`}
                         className="hover:text-primary-600 font-semibold"
                       >
-                        {testRun.osType} - {testRun.browser} - {testRun.assigneeName}
+                        {testRun.osType} - {testRun.browser} -{" "}
+                        {testRun.assigneeName}
                       </Link>
                     </h3>
                     <span
                       className={`ml-3 inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium border ${
-                        statusColors[testRun?.status as keyof typeof statusColors] || statusColors["Not Started"]
+                        statusColors[
+                          testRun?.status as keyof typeof statusColors
+                        ] || statusColors["Not Started"]
                       }`}
                     >
                       {testRun?.status || "Not Started"}
@@ -162,19 +195,29 @@ const TestPlanRuns: React.FC = () => {
                   <div className="mt-1 flex items-center text-sm text-gray-500">
                     <div className="flex items-center mr-4">
                       <CalendarClock className="h-4 w-4 mr-1" />
-                      Due from: {testRun.dueDateFrom ? format(new Date(testRun.dueDateFrom), "MMM d, yyyy") : "N/A"}
+                      Due from:{" "}
+                      {testRun.dueDateFrom
+                        ? format(new Date(testRun.dueDateFrom), "MMM d, yyyy")
+                        : "N/A"}
                     </div>
                     <div className="flex items-center">
                       <Clock className="h-4 w-4 mr-1" />
-                      Due to: {testRun.dueDateTo ? format(new Date(testRun.dueDateTo), "MMM d, yyyy") : "N/A"}
+                      Due to:{" "}
+                      {testRun.dueDateTo
+                        ? format(new Date(testRun.dueDateTo), "MMM d, yyyy")
+                        : "N/A"}
                     </div>
                   </div>
                 </div>
                 <div className="flex items-center">
                   <div className="flex flex-col mr-6">
                     <div className="flex items-center mb-1">
-                      <div className="text-sm font-medium text-gray-900 mr-1">Progress</div>
-                      <span className="text-sm font-medium text-gray-900">{testRun?.progress || 0}%</span>
+                      <div className="text-sm font-medium text-gray-900 mr-1">
+                        Progress
+                      </div>
+                      <span className="text-sm font-medium text-gray-900">
+                        {testRun?.progress || 0}%
+                      </span>
                     </div>
                     <div className="w-36 bg-gray-200 rounded-full h-2.5">
                       <div
@@ -191,22 +234,32 @@ const TestPlanRuns: React.FC = () => {
               <div className="mt-4 grid grid-cols-2 sm:grid-cols-5 gap-2">
                 <div className="flex items-center">
                   <CheckCircle className="h-4 w-4 text-success-500 mr-1" />
-                  <span className="text-sm text-gray-600">{testRun?.stats?.passed || 0} Passed</span>
+                  <span className="text-sm text-gray-600">
+                    {testRun?.stats?.passed || 0} Passed
+                  </span>
                 </div>
                 <div className="flex items-center">
                   <XCircle className="h-4 w-4 text-danger-500 mr-1" />
-                  <span className="text-sm text-gray-600">{testRun?.stats?.failed || 0} Failed</span>
+                  <span className="text-sm text-gray-600">
+                    {testRun?.stats?.failed || 0} Failed
+                  </span>
                 </div>
                 <div className="flex items-center">
                   <AlertTriangle className="h-4 w-4 text-warning-500 mr-1" />
-                  <span className="text-sm text-gray-600">{testRun?.stats?.blocked || 0} Blocked</span>
+                  <span className="text-sm text-gray-600">
+                    {testRun?.stats?.blocked || 0} Blocked
+                  </span>
                 </div>
                 <div className="flex items-center col-span-2 sm:col-span-1">
                   <div className="h-4 w-4 rounded-full border-2 border-gray-300 mr-1"></div>
-                  <span className="text-sm text-gray-600">{testRun?.stats?.untested || 0} Untested</span>
+                  <span className="text-sm text-gray-600">
+                    {testRun?.stats?.untested || 0} Untested
+                  </span>
                 </div>
                 <div className="flex items-center">
-                  <span className="text-sm font-medium text-gray-700">{testRun?.stats?.total || 0} Total</span>
+                  <span className="text-sm font-medium text-gray-700">
+                    {testRun?.stats?.total || 0} Total
+                  </span>
                 </div>
               </div>
             </li>
@@ -215,7 +268,9 @@ const TestPlanRuns: React.FC = () => {
 
         {testRuns.length === 0 && (
           <div className="p-8 text-center">
-            <p className="text-gray-500">No test runs found matching your criteria.</p>
+            <p className="text-gray-500">
+              No test runs found matching your criteria.
+            </p>
           </div>
         )}
       </div>

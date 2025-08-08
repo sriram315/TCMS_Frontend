@@ -6,6 +6,8 @@ import {
 } from "./api/testCaseAPI";
 import TestCaseForm from "./components/TestCaseForm";
 import TestCaseList from "./components/TestCaseList";
+import { useNavigate } from "react-router-dom";
+import { ChevronLeft } from "lucide-react";
 
 // Define the TestCase interface (adjust based on your actual data structure)
 interface TestCase {
@@ -33,6 +35,7 @@ function App() {
       console.error("Error fetching test cases:", error);
     }
   };
+  const navigate = useNavigate();
 
   useEffect(() => {
     fetchData();
@@ -56,37 +59,45 @@ function App() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-100">
-      {/* Tab Navigation */}
-      <div className="flex mb-6">
-        <button
-          className={`px-4 py-2 mr-2 rounded-t-lg ${
-            activeTab === "create"
-              ? "bg-white text-indigo-600 border-b-2 border-indigo-600"
-              : "bg-gray-200 text-gray-700"
-          }`}
-          onClick={() => setActiveTab("create")}
-        >
-          Create Test Case
-        </button>
+    <div className="min-h-screen">
+      <div
+        className="inline-flex justify-center items-center text-lg font-medium text-gray-900 cursor-pointer"
+        onClick={() => navigate(-1)}
+      >
+        <ChevronLeft className="h-8 w-8 text-black" /> Back
       </div>
+      <div className=" bg-gray-100">
+        {/* Tab Navigation */}
+        <div className="flex mb-6">
+          <button
+            className={`px-4 py-2 mr-2 rounded-t-lg ${
+              activeTab === "create"
+                ? "bg-white text-indigo-600 border-b-2 border-indigo-600"
+                : "bg-gray-200 text-gray-700"
+            }`}
+            onClick={() => setActiveTab("create")}
+          >
+            Create Test Case
+          </button>
+        </div>
 
-      {/* Content based on active tab */}
-      <div className="bg-white rounded-lg shadow p-2 flex items-center justify-center">
-        {activeTab === "create" ? (
-          <TestCaseForm onSave={handleSave} selected={selectedTestCase} />
-        ) : (
-          <TestCaseList
-            onEdit={(testCase: TestCase) => {
-              setSelectedTestCase(testCase);
-              setActiveTab("create");
-            }}
-            testCases={testCases}
-            moduleFilter={moduleFilter}
-            setModuleFilter={setModuleFilter}
-            onRefresh={fetchData}
-          />
-        )}
+        {/* Content based on active tab */}
+        <div className="bg-white rounded-lg shadow p-2 flex items-center justify-center">
+          {activeTab === "create" ? (
+            <TestCaseForm onSave={handleSave} selected={selectedTestCase} />
+          ) : (
+            <TestCaseList
+              onEdit={(testCase: TestCase) => {
+                setSelectedTestCase(testCase);
+                setActiveTab("create");
+              }}
+              testCases={testCases}
+              moduleFilter={moduleFilter}
+              setModuleFilter={setModuleFilter}
+              onRefresh={fetchData}
+            />
+          )}
+        </div>
       </div>
     </div>
   );
