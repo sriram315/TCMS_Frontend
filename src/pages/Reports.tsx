@@ -42,7 +42,7 @@ const CustomTooltip = ({ active, payload, label }) => {
 };
 
 const Reports: React.FC = () => {
-  const { state } = useGlobalContext();
+  const { state, dispatch } = useGlobalContext();
   const { projects, testCases } = state;
   const [pieChartData, setPieChartData] = useState<any>([]);
   const [chartData, setChartData] = useState<any[]>([]);
@@ -50,6 +50,7 @@ const Reports: React.FC = () => {
   const [testTrendData, setTestTrendData] = useState<any>([]);
 
   useEffect(() => {
+    dispatch({ type: "SET_SEARCH", payload: { text: "", isSearch: false } });
     if (testCases.length > 0) {
       processAllChartData();
     }
@@ -362,24 +363,28 @@ const Reports: React.FC = () => {
                   </td>
                 </tr>
               ) : (
-                testCases?.map((data: any, index: any) => (
-                  <tr key={index} className="hover:bg-gray-50">
-                    <td className="font-medium text-gray-900 max-w-3 truncate">
-                      {data.title}
-                    </td>
-                    <td className="max-w-2 truncate">
-                      <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-primary-100 text-primary-800 ">
-                        {data.module}
-                      </span>
-                    </td>
-                    <td className="truncate max-w-3">{data.createdBy}</td>
-                    <td>
-                      {data?.createdAt &&
-                        format(new Date(data?.createdAt), "MMMM dd, yyyy")}
-                    </td>
-                    <td>{data.status}</td>
-                  </tr>
-                ))
+                testCases
+                  ?.sort(
+                    (a, b) => new Date(b.updatedAt) - new Date(a.updatedAt)
+                  )
+                  .map((data: any, index: any) => (
+                    <tr key={index} className="hover:bg-gray-50">
+                      <td className="font-medium text-gray-900 max-w-3 truncate">
+                        {data.title}
+                      </td>
+                      <td className="max-w-2 truncate">
+                        <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-primary-100 text-primary-800 ">
+                          {data.module}
+                        </span>
+                      </td>
+                      <td className="truncate max-w-3">{data.createdBy}</td>
+                      <td>
+                        {data?.updatedAt &&
+                          format(new Date(data?.updatedAt), "MMMM dd, yyyy")}
+                      </td>
+                      <td>{data.status}</td>
+                    </tr>
+                  ))
               )}
             </tbody>
           </table>

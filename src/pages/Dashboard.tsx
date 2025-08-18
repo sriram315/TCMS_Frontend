@@ -50,7 +50,9 @@ const Dashboard: React.FC = () => {
 
   useEffect(() => {
     refetchDashboardData();
+    dispatch({ type: "SET_SEARCH", payload: { text: "", isSearch: false } });
   }, []);
+
   const chartData = ["Daily", "Weekly", "Monthly"] as const;
 
   type ChartType = (typeof chartData)[number];

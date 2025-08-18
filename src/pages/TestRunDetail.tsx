@@ -314,10 +314,8 @@ const TestRunDetail: React.FC = () => {
               </dd>
             </dl>
             <div className="border-t border-gray-200 pt-4">
-              <h4 className="text-sm font-medium text-gray-900 mb-2">
-                Description
-              </h4>
-              <p className="text-sm text-gray-700">{testRun.description}</p>
+              <h4 className="text-sm font-medium text-gray-900 mb-2">Module</h4>
+              <p className="text-sm text-gray-700">{testRun.module}</p>
             </div>
           </div>
         </div>

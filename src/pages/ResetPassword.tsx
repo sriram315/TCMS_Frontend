@@ -3,11 +3,14 @@ import { useAuth } from "../context/AuthContext";
 import { AtSign, KeyRound, Loader2, EyeOff, Eye } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 
-const LoginPage: React.FC = () => {
+const ResetPassword: React.FC = () => {
   const { login, loading } = useAuth();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [newPassword, setNewPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [error, setError] = useState("");
   const navigate = useNavigate();
 
@@ -30,13 +33,10 @@ const LoginPage: React.FC = () => {
   );
 
   return (
-    <div className="min-h-screen bg-gray-50 flex flex-col justify-center py-12 sm:px-6 lg:px-8">
+    <div className=" bg-gray-50 flex flex-col justify-center  sm:px-6 lg:px-8">
       <div className="sm:mx-auto sm:w-full sm:max-w-md">
-        <h1 className="text-center text-3xl font-bold text-primary-600">
-          TestServ TCMS
-        </h1>
         <h2 className="mt-6 text-center text-2xl font-semibold text-gray-900">
-          Sign in to your account
+          Reset your account password
         </h2>
       </div>
 
@@ -53,30 +53,8 @@ const LoginPage: React.FC = () => {
 
           <form className="space-y-6" onSubmit={handleSubmit}>
             <div>
-              <label htmlFor="email" className="label">
-                Email address
-              </label>
-              <div className="mt-1 relative rounded-md shadow-sm">
-                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                  <AtSign className="h-5 w-5 text-gray-400" />
-                </div>
-                <input
-                  id="email"
-                  name="email"
-                  type="email"
-                  autoComplete="email"
-                  required
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  className="input pl-10"
-                  placeholder="you@example.com"
-                />
-              </div>
-            </div>
-
-            <div>
               <label htmlFor="password" className="label">
-                Password
+                Current Password
               </label>
               <div className="mt-1 relative rounded-md shadow-sm">
                 <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
@@ -90,14 +68,59 @@ const LoginPage: React.FC = () => {
                   autoComplete="current-password"
                   required
                   value={password}
-                  onChange={(e) => setPassword(e.target.value)}
+                  onChange={(e) => {
+                    setPassword(e.target.value);
+                    setShowPassword(true);
+                  }}
+                  className="input pl-10"
+                />
+              </div>
+            </div>
+            <div>
+              <label htmlFor="password" className="label">
+                New Password
+              </label>
+              <div className="mt-1 relative rounded-md shadow-sm">
+                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                  <KeyRound className="h-5 w-5 text-gray-400" />
+                </div>
+                <input
+                  id="password"
+                  name="password"
+                  placeholder="password"
+                  type={"password"}
+                  autoComplete="current-password"
+                  required
+                  value={newPassword}
+                  onChange={(e) => setNewPassword(e.target.value)}
+                  className="input pl-10"
+                />
+              </div>
+            </div>
+            <div>
+              <label htmlFor="password" className="label">
+                Confirm New Password
+              </label>
+              <div className="mt-1 relative rounded-md shadow-sm">
+                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                  <KeyRound className="h-5 w-5 text-gray-400" />
+                </div>
+                <input
+                  id="password"
+                  name="password"
+                  placeholder="password"
+                  type={showConfirmPassword ? "text" : "password"}
+                  autoComplete="current-password"
+                  required
+                  value={confirmPassword}
+                  onChange={(e) => setConfirmPassword(e.target.value)}
                   className="input pl-10"
                 />
                 <div
                   className="absolute inset-y-0 right-0 pr-3 flex items-center cursor-pointer"
-                  onClick={() => setShowPassword((prev) => !prev)}
+                  onClick={() => setShowConfirmPassword((prev) => !prev)}
                 >
-                  {showPassword ? (
+                  {showConfirmPassword ? (
                     <EyeOff className="h-5 w-5 text-gray-400" />
                   ) : (
                     <Eye className="h-5 w-5 text-gray-400" />
@@ -115,10 +138,10 @@ const LoginPage: React.FC = () => {
                 {loading ? (
                   <>
                     <Loader2 className="animate-spin -ml-1 mr-2 h-4 w-4" />
-                    Signing in...
+                    Resetting...
                   </>
                 ) : (
-                  "Sign in"
+                  "Reset Password"
                 )}
               </button>
             </div>
@@ -129,4 +152,4 @@ const LoginPage: React.FC = () => {
   );
 };
 
-export default LoginPage;
+export default ResetPassword;

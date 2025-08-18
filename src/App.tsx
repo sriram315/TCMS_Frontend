@@ -8,6 +8,9 @@ import {
 import Layout from "./components/layout/Layout";
 import { useAuth } from "./context/AuthContext";
 import LoginPage from "./pages/LoginPage";
+import ProjectDetail from "./pages/ProjectDetail";
+import ProjectEditForm from "./components/TestCaseManager/components/ProjectEditForm";
+import ResetPassword from "./pages/ResetPassword";
 
 const Dashboard = lazy(() => import("./pages/Dashboard"));
 const TestCases = lazy(() => import("./pages/TestCases"));
@@ -58,6 +61,11 @@ function App() {
             <Routes>
               <Route path="/" element={<Navigate to="/dashboard" replace />} />
               <Route path="/dashboard" index={true} element={<Dashboard />} />
+              <Route
+                path="/resetPassword"
+                index={true}
+                element={<ResetPassword />}
+              />
               <Route path="/test-cases" element={<TestCases />} />
               <Route
                 path="/test-cases/edit/:id"
@@ -84,6 +92,8 @@ function App() {
               <Route path="/test-runs/:id" element={<TestRunDetail />} />
               <Route path="/reports" element={<Reports />} />
               <Route path="/projects" element={<Projects />} />
+              <Route path="/projects/:id" element={<ProjectDetail />} />
+              <Route path="/project/edit/:id" element={<ProjectEditForm />} />
               <Route path="/settings" element={<Settings />} />
               <Route path="/test-cases/create" element={<TestCaseManager />} />
               <Route path="/projects/projectForm" element={<ProjectForm />} />

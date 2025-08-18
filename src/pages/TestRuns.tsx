@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useNavigate, useLocation } from "react-router-dom";
 import PageHeader from "../components/common/PageHeader";
 import { format } from "date-fns";
 
@@ -76,14 +76,14 @@ const calculateTestRunStats = (testCases) => {
 };
 
 const TestRuns: React.FC = () => {
-  const { state } = useGlobalContext();
-  const { testRuns: globalTestRuns, projects: globalProjects } = state;
-  const [searchQuery, setSearchQuery] = useState("");
+  const { state, dispatch } = useGlobalContext();
+  const { testRuns: globalTestRuns, projects: globalProjects, search } = state;
   const [testRuns, setTestRuns] = useState([]);
   const [projects, setProjects] = useState<any[]>([]);
   const [selectedProjectId, setSelectedProjectId] = useState("All Projects");
   const [allTestRuns, setAllTestRuns] = useState([]);
   const navigate = useNavigate();
+  const location = useLocation();
 
   const user = JSON.parse(sessionStorage.getItem("user"));
   const role = user.role;
@@ -122,22 +122,25 @@ const TestRuns: React.FC = () => {
   };
 
   useEffect(() => {
+    dispatch({ type: "SET_SEARCH", payload: { text: "", isSearch: true } });
     if (location.state == null) {
       fetchTestRuns();
     } else {
-      const processedTestRuns = location.state.testRun.map((test, index) => {
-        const { stats, progress, testRunStatus } = calculateTestRunStats(
-          test.testCases || []
-        );
+      const processedTestRuns = location.state.testRun.map(
+        (test: { testCases: any; module: any }) => {
+          const { stats, progress, testRunStatus } = calculateTestRunStats(
+            test.testCases || []
+          );
 
-        return {
-          ...test,
-          testCases: test.module || [], // Ensure testCases is always an array
-          stats,
-          progress,
-          status: testRunStatus, // Override backend status with calculated status
-        };
-      });
+          return {
+            ...test,
+            testCases: test.module || [], // Ensure testCases is always an array
+            stats,
+            progress,
+            status: testRunStatus, // Override backend status with calculated status
+          };
+        }
+      );
       setAllTestRuns(processedTestRuns);
       setTestRuns(processedTestRuns);
     }
@@ -156,7 +159,9 @@ const TestRuns: React.FC = () => {
   }, [selectedProjectId, allTestRuns]);
 
   const filteredTestRuns = testRuns.filter((testRun) =>
-    (testRun.name || "").toLowerCase().includes(searchQuery.toLowerCase())
+    (testRun.name || "")
+      .toLowerCase()
+      .includes(search.text.toLowerCase().trim())
   );
 
   return (

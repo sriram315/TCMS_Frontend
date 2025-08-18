@@ -10,7 +10,6 @@ interface LayoutProps {
 const Layout: React.FC<LayoutProps> = ({ children }) => {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const { user } = useAuth();
-
   if (!user) {
     return <div className="min-h-screen bg-gray-100">{children}</div>;
   }

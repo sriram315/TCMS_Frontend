@@ -69,18 +69,12 @@ const validationSchema = Yup.object({
 });
 
 export default function TestCaseForm({ selected }: TestCaseFormProps) {
-  const { fetchTestCases } = useGlobalContext();
+  const { fetchTestCases, state, fetchTestRuns } = useGlobalContext();
+  const { projects } = state;
   const [initialValues, setInitialValues] = useState<TestCase>(initialState);
   const userId: string =
     JSON.parse(sessionStorage.getItem("user") || "{}")?._id || "";
 
-  interface Project {
-    _id: string;
-    name: string;
-    assignedTo: { _id: string }[];
-    // Add other fields if needed
-  }
-  const [projects, setProjects] = useState<Project[]>([]);
   const navigate = useNavigate();
   const [userToken, setUserToken] = useState("");
 
@@ -98,6 +92,7 @@ export default function TestCaseForm({ selected }: TestCaseFormProps) {
         },
       });
       fetchTestCases();
+      fetchTestRuns();
       toast.success("Test case saved successfully!", {
         position: "top-right",
         autoClose: 3000,
@@ -126,19 +121,6 @@ export default function TestCaseForm({ selected }: TestCaseFormProps) {
   };
 
   useEffect(() => {
-    // Fetch projects from the API
-    axios
-      .get(`${API_URL}/projects`)
-      .then((response) => {
-        setProjects(response.data);
-      })
-      .catch((error) => {
-        console.error("Error fetching projects:", error);
-      });
-  }, []);
-  useEffect(() => {}, [projects]);
-
-  useEffect(() => {
     if (selected) {
       setInitialValues(selected);
     } else {
@@ -153,7 +135,13 @@ export default function TestCaseForm({ selected }: TestCaseFormProps) {
     { resetForm, setSubmitting }: FormikHelpers<TestCase>
   ) => {
     try {
-      createTestCase({ ...values, createdBy: user.email });
+      const trimmedValues = Object.fromEntries(
+        Object.entries(values).map(([key, val]) => [
+          key,
+          typeof val === "string" ? val.trim() : val,
+        ])
+      ) as TestCase;
+      createTestCase({ ...trimmedValues, createdBy: user.email });
       resetForm();
     } catch (error) {
       toast.error("Failed to save test case. Please try again.", {
