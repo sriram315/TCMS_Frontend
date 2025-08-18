@@ -21,6 +21,8 @@ const TestPlanRunsDetail: React.FC = () => {
   const dueDateFrom = location.state?.testRun?.dueDateFrom || "";
   const dueDateTo = location.state?.testRun?.dueDateTo || "";
   const projectName = location.state?.projectName;
+  const moduleName = location.state?.testRun?.module?.[0]?.module || "";
+
   const title = `${location.state?.testRun.osType} - ${location.state?.testRun.browser} - ${location.state?.testRun.assigneeName}`;
   const [users, setUsers] = useState<any>([]); // Use location state or fallback to testRunData
   const [data, setData] = useState<any>([]); // Use location state or fallback to testRunData
@@ -258,8 +260,12 @@ const TestPlanRunsDetail: React.FC = () => {
                   {format(new Date(dueDateTo), "MMMM dd, yyyy")}
                 </dd>
               </dl>
-
-              <div className="border-t border-gray-200 pt-4"></div>
+              <div className="border-t border-gray-200 pt-4">
+                <h4 className="text-sm font-medium text-gray-900 mb-2">
+                  Module
+                </h4>
+                <p className="text-sm text-gray-700">{moduleName}</p>
+              </div>
             </div>
           </div>
         </div>

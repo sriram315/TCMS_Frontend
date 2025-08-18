@@ -7,6 +7,8 @@ import {
   Settings,
   LogOut,
   User,
+  Search,
+  ShieldCheck,
 } from "lucide-react";
 import { useAuth } from "../../context/AuthContext";
 import TokenModal from "../TestCaseManager/TokenModal";
@@ -18,7 +20,8 @@ interface HeaderProps {
 
 const Header: React.FC<HeaderProps> = ({ openSidebar }) => {
   const { user, logout } = useAuth();
-  const { dispatch } = useGlobalContext();
+  const { state, dispatch } = useGlobalContext();
+  const { search } = state;
 
   const [profileOpen, setProfileOpen] = useState(false);
   const [notificationsOpen, setNotificationsOpen] = useState(false);
@@ -68,6 +71,30 @@ const Header: React.FC<HeaderProps> = ({ openSidebar }) => {
                 </Link>
               </div>
             </div>
+            {search?.isSearch && (
+              <div className="min-w-0 flex-1 md:px-8 lg:px-20 xl:col-span-6">
+                <div className="flex items-center px-6 py-3.5 md:mx-auto md:max-w-3xl lg:mx-0 lg:max-w-none xl:px-0">
+                  <div className="grid w-full grid-cols-1">
+                    <input
+                      name="search"
+                      placeholder="Search"
+                      className="col-start-1 row-start-1 block w-full rounded-md bg-white py-1.5 pr-3 pl-10 text-gray-900 outline-1 -outline-offset-1 outline-gray-300 placeholder:text-gray-400 focus:outline-2 focus:-outline-offset-2 focus:outline-indigo-600 sm:text-sm/6 border"
+                      value={search?.text}
+                      onChange={(e) =>
+                        dispatch({
+                          type: "SET_SEARCH",
+                          payload: { text: e.target.value, isSearch: true },
+                        })
+                      }
+                    />
+                    <Search
+                      aria-hidden="true"
+                      className="pointer-events-none col-start-1 row-start-1 ml-3 size-5 self-center text-gray-400"
+                    />
+                  </div>
+                </div>
+              </div>
+            )}
 
             <div className="flex items-center">
               <div className="ml-4 relative" ref={dropdownRef}>
@@ -108,6 +135,15 @@ const Header: React.FC<HeaderProps> = ({ openSidebar }) => {
                         <User className="mr-2 h-4 w-4" />
                         <span>Your Profile</span>
                       </Link>
+                      {/* <Link
+                        to="/resetPassword"
+                        className="dropdown-item flex items-center"
+                        role="menuitem"
+                        onClick={() => setProfileOpen(false)}
+                      >
+                        <ShieldCheck className="mr-2 h-4 w-4" />
+                        <span>Reset Password</span>
+                      </Link> */}
 
                       <button
                         className="dropdown-item flex items-center w-full"

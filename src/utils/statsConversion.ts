@@ -1,42 +1,45 @@
 const generateMonthlyStats = (testCases: any[]) => {
-  const months: {
-    [key: string]: {
-      passed: number;
-      failed: number;
-      data: any[];
-    };
-  } = {};
+  const months: Record<
+    string,
+    { passed: number; failed: number; data: any[]; date: Date }
+  > = {};
 
   testCases?.forEach((test) => {
     const updatedAt = new Date(test.updatedAt);
-    const monthYear = updatedAt.toLocaleString("default", {
+    const monthYearKey = `${updatedAt.getFullYear()}-${String(
+      updatedAt.getMonth() + 1
+    ).padStart(2, "0")}`;
+    const displayName = updatedAt.toLocaleString("default", {
       month: "short",
       year: "numeric",
     });
 
-    if (!months[monthYear]) {
-      months[monthYear] = {
+    if (!months[monthYearKey]) {
+      months[monthYearKey] = {
         passed: 0,
         failed: 0,
         data: [],
+        date: updatedAt,
+        name: displayName,
       };
     }
 
     const status = String(test.status).toLowerCase();
-
     if (status === "passed") {
-      months[monthYear].passed += 1;
-      months[monthYear].data.push(test);
+      months[monthYearKey].passed += 1;
+      months[monthYearKey].data.push(test);
     } else if (status === "failed") {
-      months[monthYear].failed += 1;
-      months[monthYear].data.push(test);
+      months[monthYearKey].failed += 1;
+      months[monthYearKey].data.push(test);
     }
   });
 
-  return Object.entries(months).map(([month, counts]) => ({
-    name: month,
-    ...counts,
-  }));
+  return Object.values(months)
+    .sort((a, b) => a.date.getTime() - b.date.getTime()) // ascending
+    .map(({ date, name, ...counts }) => ({
+      name,
+      ...counts,
+    }));
 };
 
 const generateWeeklyStats = (testCases: any[]) => {
@@ -61,10 +64,16 @@ const generateWeeklyStats = (testCases: any[]) => {
     }
   );
 
-  return Object.entries(weeks).map(([week, counts]) => ({
-    name: week,
-    ...(typeof counts === "object" && counts !== null ? counts : {}),
-  }));
+  return Object.entries(weeks)
+    .map(([week, counts]) => ({
+      name: week,
+      ...(typeof counts === "object" && counts !== null ? counts : {}),
+    }))
+    .sort((a, b) => {
+      const weekA = parseInt(a.name.replace("Week ", ""), 10);
+      const weekB = parseInt(b.name.replace("Week ", ""), 10);
+      return weekA - weekB; // ascending order
+    });
 };
 
 const generateDailyStats = (testCases: any[]) => {
@@ -97,10 +106,12 @@ const generateDailyStats = (testCases: any[]) => {
     }
   });
 
-  return Object.entries(days).map(([day, counts]) => ({
-    name: day,
-    ...counts,
-  }));
+  return Object.entries(days)
+    .map(([day, counts]) => ({
+      name: day,
+      ...counts,
+    }))
+    .sort((a, b) => new Date(a.name).getTime() - new Date(b.name).getTime());
 };
 
 const getWeekNumber = (date: number | Date) => {

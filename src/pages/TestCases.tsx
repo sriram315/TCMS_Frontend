@@ -1,7 +1,16 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import PageHeader from "../components/common/PageHeader";
-import { Plus, ChevronDownIcon, Dot, Upload, DownloadIcon } from "lucide-react";
+import {
+  Plus,
+  ChevronDownIcon,
+  Dot,
+  Upload,
+  DownloadIcon,
+  Search,
+  ChevronDown,
+  ChevronUp,
+} from "lucide-react";
 import StatusBadge from "../components/common/StatusBadge";
 import axios from "axios";
 import { format } from "date-fns";
@@ -9,9 +18,14 @@ import { API_URL } from "../config";
 import downloadExcel from "../utils/downloadExcel.ts";
 import { useGlobalContext } from "../context/GlobalContext.tsx";
 import { toast, ToastContainer } from "react-toastify";
+import Checkbox from "../components/common/Checkbox.tsx";
 const TestCases: React.FC = () => {
-  const { state: globalState, fetchTestCases } = useGlobalContext();
-  const { projects: allProjects, testCases: allTestCases } = globalState;
+  const { state: globalState, fetchTestCases, dispatch } = useGlobalContext();
+  const {
+    projects: allProjects,
+    testCases: allTestCases,
+    search,
+  } = globalState;
   const [selectedSection, setSelectedSection] = useState<string | null>(null);
   const [testCases, setTestCases] = useState<any[]>([]);
   const [categorizedTestCases, setCategorizedTestCases] = useState<any>({});
@@ -27,11 +41,19 @@ const TestCases: React.FC = () => {
   const [uploadProjectId, setUploadProjectId] = useState<string>("");
   const [uploadError, setUploadError] = useState<string | null>(null);
   const [isUploading, setIsUploading] = useState<boolean>(false);
+  const [filterStatus, setFilterStatus] = useState({
+    status: false,
+    priority: false,
+  });
+
+  const [statusFilter, setStatusFilter] = useState([]);
+  const [priorityFilter, setPriorityFilter] = useState([]);
 
   const navigate = useNavigate();
   const user = JSON.parse(sessionStorage.getItem("user") || "{}");
   const email = user.email;
   const role = user.role;
+  const containerRef = useRef(null);
 
   const categorizeTestCases = (testCases: any[]) => {
     return testCases.reduce((acc: any, testCase: any) => {
@@ -43,6 +65,9 @@ const TestCases: React.FC = () => {
       return acc;
     }, {});
   };
+  useEffect(() => {
+    dispatch({ type: "SET_SEARCH", payload: { text: "", isSearch: true } });
+  }, []);
 
   useEffect(() => {
     setProjects(
@@ -65,7 +90,7 @@ const TestCases: React.FC = () => {
 
     setTestCases(allTestCases);
     setCategorizedTestCases(categorized);
-  }, [allTestCases]);
+  }, [allTestCases, statusFilter, priorityFilter]);
 
   const handleUpload = async () => {
     if (!uploadFile || !uploadProjectId || !email) {
@@ -124,18 +149,48 @@ const TestCases: React.FC = () => {
       updatedTestCases = allTestCases.filter(
         (testCase) => testCase.projectId === selectedProjectId
       );
-      // if (selectedProjectId && !projectMap[selectedProjectId]) {
-      //   fetchProjectById(selectedProjectId);
-      // }
     }
     setTestCases(updatedTestCases);
     setCategorizedTestCases(categorizeTestCases(updatedTestCases));
   }, [selectedProjectId, allTestCases]);
 
-  const filteredTestCases = testCases?.filter((testCase) =>
-    testCase?.title?.toLowerCase()?.includes(searchQuery?.toLowerCase())
-  );
+  const filteredTestCases = testCases?.filter((testCase) => {
+    const allFields = Object.values(testCase || {})
+      .join(" ")
+      .toLowerCase();
+    return (
+      allFields.includes(String(search?.text).toLowerCase()) &&
+      (statusFilter.length === 0 || statusFilter.includes(testCase.status)) &&
+      (priorityFilter.length === 0 ||
+        priorityFilter.includes(testCase.priority))
+    );
+  });
+  const status = [
+    { id: 1, name: "Passed", value: "passed", selected: false },
+    { id: 2, name: "Failed", value: "failed", selected: false },
+    { id: 3, name: "Blocked", value: "blocked", selected: false },
+    { id: 4, name: "Untested", value: "Untested", selected: false },
+  ];
+  const priority = [
+    { id: 1, name: "High", value: "High", selected: false },
+    { id: 2, name: "Medium", value: "Medium", selected: false },
+    { id: 3, name: "Low", value: "Low", selected: false },
+  ];
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (
+        containerRef.current &&
+        !containerRef.current.contains(event.target)
+      ) {
+        setFilterStatus({ status: false, priority: false });
+      }
+    };
 
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, []);
   return (
     <div>
       <ToastContainer
@@ -206,7 +261,7 @@ const TestCases: React.FC = () => {
         }
       />
       {showUploadModal && (
-        <div className="fixed inset-0 bg-gray-600 bg-opacity-50 flex items-center justify-center">
+        <div className="fixed inset-0 bg-gray-600 z-50 bg-opacity-50 flex items-center justify-center">
           <div className="bg-white p-6 rounded-lg shadow-lg w-full max-w-md">
             <h3 className="text-lg font-semibold mb-4">Upload Test Cases</h3>
             {uploadError && (
@@ -294,7 +349,6 @@ const TestCases: React.FC = () => {
                 >
                   Modules
                 </h3>
-                {console.log(categorizedTestCases[selectedSection])}
                 <DownloadIcon
                   className="h-4 w-4 cursor-pointer"
                   onClick={() =>
@@ -343,16 +397,72 @@ const TestCases: React.FC = () => {
             </div>
           </div>
 
-          <div className="flex-1 overflow-x-auto">
+          <div className="flex-1 overflow-x-auto relative">
             <div className="bg-white rounded-lg shadow-sm border border-gray-200">
               <div className="overflow-x-auto">
-                <table className="table ">
+                <table className="table">
                   <thead>
-                    <tr>
+                    <tr ref={containerRef}>
                       <th scope="col">Test Id</th>
                       <th scope="col">Test Cases</th>
-                      <th scope="col">Status</th>
-                      <th scope="col">Priority</th>
+                      <th scope="col">
+                        <div
+                          className="inline-flex cursor-pointer"
+                          onClick={() => {
+                            setFilterStatus((prevData) => ({
+                              status: !prevData.status,
+                              priority: false,
+                            }));
+                          }}
+                        >
+                          Status
+                          {statusFilter.length !== 0 &&
+                            `(${statusFilter.length})`}
+                          <ChevronDown
+                            className={`h-5 w-5 transition-transform duration-300 ease-out ${
+                              filterStatus.status ? "-rotate-180" : "rotate-0"
+                            }`}
+                          />
+                        </div>
+                        {filterStatus.status && (
+                          <div className=" bg-white">
+                            <Checkbox
+                              people={status}
+                              statusFilter={statusFilter}
+                              setStatusFilter={setStatusFilter}
+                            />
+                          </div>
+                        )}
+                      </th>
+                      <th scope="col">
+                        <div
+                          className="inline-flex  cursor-pointer"
+                          onClick={() => {
+                            setFilterStatus((prevData) => ({
+                              priority: !prevData.priority,
+                              status: false,
+                            }));
+                          }}
+                        >
+                          Priority
+                          {priorityFilter.length !== 0 &&
+                            `(${priorityFilter.length})`}
+                          <ChevronDown
+                            className={`h-5 w-5 transition-transform duration-300 ease-out ${
+                              filterStatus.priority ? "-rotate-180" : "rotate-0"
+                            }`}
+                          />
+                        </div>
+                        {filterStatus.priority && (
+                          <div className="absolute bg-white">
+                            <Checkbox
+                              people={priority}
+                              statusFilter={priorityFilter}
+                              setStatusFilter={setPriorityFilter}
+                            />
+                          </div>
+                        )}
+                      </th>
                       <th scope="col">Modules</th>
                       <th scope="col">Project</th>
                       <th scope="col">Last Updated</th>
@@ -361,10 +471,15 @@ const TestCases: React.FC = () => {
                   <tbody>
                     {selectedSection
                       ? categorizedTestCases[selectedSection]
-                          ?.filter((testCase: any) =>
-                            testCase.title
-                              .toLowerCase()
-                              .includes(searchQuery.toLowerCase())
+                          ?.filter(
+                            (testCase: any) =>
+                              testCase.title
+                                .toLowerCase()
+                                .includes(searchQuery.toLowerCase()) &&
+                              (statusFilter.length === 0 ||
+                                statusFilter.includes(testCase.status)) &&
+                              (priorityFilter.length === 0 ||
+                                priorityFilter.includes(testCase.priority))
                           )
                           .map((testCase: any) => (
                             <tr key={testCase._id} className="hover:bg-gray-50">
@@ -395,7 +510,7 @@ const TestCases: React.FC = () => {
                               </td>
                               <td>
                                 <span
-                                  className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
+                                  className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium  ${
                                     testCase.priority === "High"
                                       ? "bg-danger-100 text-danger-800"
                                       : testCase.priority === "Medium"

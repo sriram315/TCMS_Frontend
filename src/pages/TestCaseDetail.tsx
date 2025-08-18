@@ -8,6 +8,7 @@ import axios from "axios";
 import { format } from "date-fns";
 import { API_URL } from "../config";
 import { toast, ToastContainer } from "react-toastify";
+import { useGlobalContext } from "../context/GlobalContext";
 
 interface TestCase {
   _id: string;
@@ -33,19 +34,26 @@ interface TestCase {
 }
 
 const TestCaseDetail: React.FC = () => {
+  const {
+    state,
+    fetchTestCases: fetchGlobalTestCases,
+    dispatch,
+  } = useGlobalContext();
+  const { projects, testCases: globalTestCases } = state;
   const { id } = useParams<{ id: string }>();
   const [activeTab, setActiveTab] = useState(() => {
     const savedTab = localStorage.getItem(`testCase_${id}_activeTab`);
     return savedTab || "detail";
   });
+
   const location = useLocation();
   const testCaseData = location.state as any;
+
   interface Project {
     _id: string;
     name: string;
     // Add other properties if needed
   }
-  const [projects, setProjects] = useState<Project[]>([]);
   const [projectsName, setProjectsName] = useState("");
   const userEmail: string =
     JSON.parse(sessionStorage.getItem("user") || "{}")?.email || "";
@@ -62,6 +70,7 @@ const TestCaseDetail: React.FC = () => {
 
   useEffect(() => {
     setTestCase(testCaseData);
+    dispatch({ type: "SET_SEARCH", isSearch: false });
   }, []);
 
   const handleEdit = () => {
@@ -102,6 +111,7 @@ const TestCaseDetail: React.FC = () => {
           },
         }
       );
+      fetchGlobalTestCases();
       toast.success("Test case deleted successfully!", {
         position: "top-right",
         autoClose: 2000,
@@ -127,33 +137,26 @@ const TestCaseDetail: React.FC = () => {
     }
   };
   const fetchTestCase = () => {
-    axios
-      .get(`${API_URL}/testcases`)
-      .then((response) => {
-        const filteredTestCases = response.data.filter(
-          (testCases: any) => testCases._id === testCaseData._id
-        );
+    const filteredTestCases = globalTestCases.filter(
+      (testCases: any) => testCases._id === testCaseData._id
+    );
 
-        setTestCase((prev) => ({
-          ...prev,
-          ...filteredTestCases[0],
-        }));
+    setTestCase((prev) => ({
+      ...prev,
+      ...filteredTestCases[0],
+    }));
 
-        const activityHistory = response.data
-          .filter(
-            (testId: any) =>
-              testId.testCaseId === id &&
-              testId.projectId === testCaseData.projectId &&
-              testId.module === testCaseData.module
-          )
-          .map((completedTestData: any) => completedTestData?.activityLogs)
-          .map((log: any) => log);
+    const activityHistory = globalTestCases
+      .filter(
+        (testId: any) =>
+          testId.testCaseId === id &&
+          testId.projectId === testCaseData.projectId &&
+          testId.module === testCaseData.module
+      )
+      .map((completedTestData: any) => completedTestData?.activityLogs)
+      .map((log: any) => log);
 
-        setHistory(activityHistory);
-      })
-      .catch((error) => {
-        console.error("Error while fetching the test cases:", error);
-      });
+    setHistory(activityHistory);
   };
   useEffect(() => {
     if (location.pathname.includes("test-cases")) {
@@ -166,20 +169,8 @@ const TestCaseDetail: React.FC = () => {
   }, [id, testCaseData]);
 
   useEffect(() => {
-    // Fetch projects from the API
-    axios
-      .get(`${API_URL}/projects`)
-      .then((response) => {
-        setProjects(response.data);
-      })
-      .catch((error) => {
-        console.error("Error fetching projects:", error);
-      });
-  }, []);
-
-  useEffect(() => {
     const projectDetails = projects.filter(
-      (project) => project?._id === testCase.projectId
+      (project: { _id: any }) => project?._id === testCase.projectId
     );
     setProjectsName(projectDetails[0]?.name);
   }, [projects, testCase]);
@@ -408,18 +399,18 @@ const TestCaseDetail: React.FC = () => {
                   })
                   .map((log: any) => (
                     <li
-                      key={log._id}
+                      key={log?._id}
                       className="relative pl-5 pb-4 border-l-2 border-gray-200"
                     >
                       <div className="absolute w-3 h-3 bg-primary-500 rounded-full -left-[7px] top-1.5"></div>
                       <div className="flex justify-between items-start">
                         <div>
                           <p className="font-medium text-gray-900 truncate max-w-full">
-                            {log.message}
+                            {log?.message}
                           </p>
                         </div>
                         <span className="text-sm text-gray-500 whitespace-nowrap">
-                          {new Date(log.createdAt).toLocaleString("en-US", {
+                          {new Date(log?.createdAt).toLocaleString("en-US", {
                             year: "numeric",
                             month: "short",
                             day: "numeric",

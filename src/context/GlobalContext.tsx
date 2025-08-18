@@ -30,6 +30,7 @@ type GlobalType = {
   activities: any | [];
   testStatusData: any | [];
   testCases: any | [];
+  search: object;
 };
 
 const initialState: GlobalType = {
@@ -46,6 +47,7 @@ const initialState: GlobalType = {
   testStatusData: [],
   activities: [],
   testCases: [],
+  search: { text: "", isSearch: false },
 };
 
 type GlobalAction =
@@ -56,6 +58,7 @@ type GlobalAction =
   | { type: "SET_TEST_STATUS_DATA"; payload: any[] }
   | { type: "SET_ACTIVITIES"; payload: any[] }
   | { type: "SET_TESTCASES"; payload: any[] }
+  | { type: "SET_SEARCH"; payload: object }
   | { type: "CLEAR_CONTEXT" };
 
 const globalReducer = (state: GlobalType, action: GlobalAction): GlobalType => {
@@ -74,6 +77,8 @@ const globalReducer = (state: GlobalType, action: GlobalAction): GlobalType => {
       return { ...state, activities: action.payload };
     case "SET_TESTCASES":
       return { ...state, testCases: action.payload };
+    case "SET_SEARCH":
+      return { ...state, search: action.payload };
     case "CLEAR_CONTEXT":
       return initialState;
     default:
@@ -86,11 +91,15 @@ const GlobalContext = createContext<{
   dispatch: React.Dispatch<GlobalAction>;
   refetchDashboardData: () => void;
   fetchTestCases: () => void;
+  fetchTestRuns: () => void;
+  fetchProjects: () => void;
 }>({
   state: initialState,
   dispatch: () => null,
   refetchDashboardData: () => {},
   fetchTestCases: () => {},
+  fetchTestRuns: () => {},
+  fetchProjects: () => {},
 });
 
 export const GlobalProvider = ({ children }: { children: ReactNode }) => {
@@ -101,14 +110,17 @@ export const GlobalProvider = ({ children }: { children: ReactNode }) => {
   const userId = user._id;
   const { user: currentUser } = useAuth();
 
-  const filteredProjects = (data) => {
+  const filteredProjects = (data: any[]) => {
     if (String(role).toLowerCase() === "superadmin") {
       return data;
     } else if (String(role).toLowerCase() === "admin") {
-      return data.filter((project) => project.createdBy?._id === userId);
+      return data.filter(
+        (project: { createdBy: { _id: any } }) =>
+          project.createdBy?._id === userId
+      );
     } else {
       return data.filter(
-        (project) =>
+        (project: { assignedTo: any[] }) =>
           Array.isArray(project.assignedTo) &&
           project.assignedTo.some((assignee) => assignee._id === userId)
       );
@@ -158,6 +170,29 @@ export const GlobalProvider = ({ children }: { children: ReactNode }) => {
     try {
       const { data } = await axios.get(`${API_URL}/testcases`);
 
+      // const filteredData =
+      //   String(role).toLowerCase() === "superadmin"
+      //     ? data
+      //     : String(role).toLowerCase() === "admin"
+      //     ? state.projects
+      //         .filter(
+      //           (project: { createdBy: { _id: any } }) =>
+      //             currentUser && project?.createdBy?._id === currentUser._id
+      //         )
+      //         .flatMap((project: { testCases: any }) => project.testCases)
+      //     : state.projects.flatMap((project: { assignedTo: any; _id: any }) => {
+      //         const isAssigned = project.assignedTo.some(
+      //           (user: { _id: any }) => user._id === currentUser?._id
+      //         );
+
+      //         if (isAssigned) {
+      //           return data.filter(
+      //             (item: { projectId: string }) =>
+      //               item.projectId === project._id
+      //           );
+      //         }
+      //         return [];
+      //       });
       const filteredData =
         String(role).toLowerCase() === "superadmin"
           ? data
@@ -167,7 +202,13 @@ export const GlobalProvider = ({ children }: { children: ReactNode }) => {
                 (project: { createdBy: { _id: any } }) =>
                   currentUser && project?.createdBy?._id === currentUser._id
               )
-              .flatMap((project: { testCases: any }) => project.testCases)
+              .flatMap((project: { testCases: any[] }) =>
+                project.testCases.map((tc) => {
+                  // Find full test case in latest API data
+                  const fresh = data.find((d: any) => d._id === tc._id);
+                  return fresh || tc; // use fresh if found, else fallback to old
+                })
+              )
           : state.projects.flatMap((project: { assignedTo: any; _id: any }) => {
               const isAssigned = project.assignedTo.some(
                 (user: { _id: any }) => user._id === currentUser?._id
@@ -289,7 +330,14 @@ export const GlobalProvider = ({ children }: { children: ReactNode }) => {
 
   return (
     <GlobalContext.Provider
-      value={{ state, dispatch, refetchDashboardData, fetchTestCases }}
+      value={{
+        state,
+        dispatch,
+        refetchDashboardData,
+        fetchTestCases,
+        fetchTestRuns,
+        fetchProjects,
+      }}
     >
       {children}
     </GlobalContext.Provider>

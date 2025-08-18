@@ -7,6 +7,7 @@ import axios from "axios";
 import { useLocation, useNavigate } from "react-router-dom";
 import { API_URL } from "../../../config";
 import { ChevronLeft } from "lucide-react";
+import { useGlobalContext } from "../../../context/GlobalContext";
 
 // Define the TestCase interface (consistent with TestCaseGrid.tsx)
 interface TestCase {
@@ -68,17 +69,13 @@ const validationSchema = Yup.object({
 });
 
 export default function TestCaseEditForm() {
+  const { state: globalState, fetchTestCases } = useGlobalContext();
+  const { projects } = globalState;
+
   const [initialValues, setInitialValues] = useState<TestCase>(initialState);
   const userEmail: string =
     JSON.parse(sessionStorage.getItem("user") || "{}")?.email || "";
 
-  interface Project {
-    _id: string;
-    name: string;
-    assignedTo?: string[];
-    // add other fields as needed
-  }
-  const [projects, setProjects] = useState<Project[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const location = useLocation();
   const { state } = location;
@@ -86,17 +83,6 @@ export default function TestCaseEditForm() {
   useEffect(() => {
     setInitialValues(state.testCaseData || initialState);
   }, [state]);
-  useEffect(() => {
-    // Fetch projects from the API
-    axios
-      .get(`${API_URL}/projects`)
-      .then((response) => {
-        setProjects(response.data);
-      })
-      .catch((error) => {
-        console.error("Error fetching projects:", error);
-      });
-  }, []);
 
   const navigate = useNavigate();
   const token = sessionStorage.getItem("token") || ""; // Replace with your actual token retrieval method
@@ -122,6 +108,7 @@ export default function TestCaseEditForm() {
           },
         }
       );
+      fetchTestCases();
 
       toast.success("Test case updated successfully!", {
         position: "top-right",

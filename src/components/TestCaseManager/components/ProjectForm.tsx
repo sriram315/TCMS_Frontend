@@ -14,7 +14,6 @@ import axios from "axios"; // Import axios for making HTTP requests
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../../../context/AuthContext";
 import { API_URL } from "../../../config";
-import Checkbox from "../../common/Checkbox";
 import { ChevronLeft } from "lucide-react";
 
 // Define the TestCase interface (consistent with TestCaseGrid.tsx)
@@ -147,7 +146,6 @@ export default function ProjectForm({
 
   return (
     <div>
-      {" "}
       <div
         className="inline-flex justify-center items-center text-lg font-medium text-gray-900 cursor-pointer"
         onClick={() => navigate(-1)}
@@ -244,37 +242,6 @@ export default function ProjectForm({
                       className="text-red-500 text-xs mt-1"
                     />
                   </div>
-                  {/* <div>
-                  <label
-                    htmlFor="assignedTo"
-                    className="block text-sm font-medium text-gray-700 mb-1"
-                  >
-                    Assigned to
-                  </label>
-                  <Field
-                    as="select"
-                    id="assignedTo"
-                    name="assignedTo"
-                    className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-1 focus:ring-indigo-500 focus:border-indigo-500 text-gray-700 ${
-                      errors["assignedTo" as keyof TestCase] &&
-                      touched["assignedTo" as keyof TestCase]
-                        ? "border-red-500"
-                        : "border-gray-300"
-                    }`}
-                  >
-                    <option value="">Select</option>
-                    {users.map((user: any) => (
-                      <option key={user._id} value={user._id}>
-                        {user.name}
-                      </option>
-                    ))}
-                  </Field>
-                  <ErrorMessage
-                    name="assignedTo"
-                    component="div"
-                    className="text-red-500 text-xs mt-1"
-                  />
-                </div> */}
                 </div>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <FieldArray name="assignedTo">
