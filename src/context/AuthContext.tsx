@@ -58,10 +58,10 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({
     let data;
     try {
       // Mock login - in a real app, this would call an API
-      const response = await axios.post(
-        `${API_URL}/auth/login`,
-        { email, password }
-      );
+      const response = await axios.post(`${API_URL}/auth/login`, {
+        email,
+        password,
+      });
       if (!response.data.data.user.isApproved)
         throw new Error("User not approved");
 
@@ -81,6 +81,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({
 
   const logout = () => {
     sessionStorage.removeItem("user");
+    sessionStorage.removeItem("token");
     setUser(null);
   };
 

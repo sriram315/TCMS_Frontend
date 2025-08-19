@@ -135,7 +135,7 @@ const Header: React.FC<HeaderProps> = ({ openSidebar }) => {
                         <User className="mr-2 h-4 w-4" />
                         <span>Your Profile</span>
                       </Link>
-                      {/* <Link
+                      <Link
                         to="/resetPassword"
                         className="dropdown-item flex items-center"
                         role="menuitem"
@@ -143,7 +143,7 @@ const Header: React.FC<HeaderProps> = ({ openSidebar }) => {
                       >
                         <ShieldCheck className="mr-2 h-4 w-4" />
                         <span>Reset Password</span>
-                      </Link> */}
+                      </Link>
 
                       <button
                         className="dropdown-item flex items-center w-full"

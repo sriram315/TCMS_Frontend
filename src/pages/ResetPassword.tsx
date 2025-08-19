@@ -2,10 +2,15 @@ import React, { useCallback, useState } from "react";
 import { useAuth } from "../context/AuthContext";
 import { AtSign, KeyRound, Loader2, EyeOff, Eye } from "lucide-react";
 import { useNavigate } from "react-router-dom";
+import axios from "axios";
+import { API_URL } from "../config";
+import { useGlobalContext } from "../context/GlobalContext";
+import { toast, ToastContainer } from "react-toastify";
 
 const ResetPassword: React.FC = () => {
-  const { login, loading } = useAuth();
-  const [email, setEmail] = useState("");
+  const { logout } = useAuth();
+  const { dispatch } = useGlobalContext();
+  const [loading, setLoading] = useState(false);
   const [password, setPassword] = useState("");
   const [newPassword, setNewPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
@@ -13,27 +18,59 @@ const ResetPassword: React.FC = () => {
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [error, setError] = useState("");
   const navigate = useNavigate();
+  const user = JSON.parse(sessionStorage.getItem("user") || "{}");
+  const token = sessionStorage.getItem("token") || "";
 
-  const handleSubmit = useCallback(
-    async (e: React.FormEvent) => {
-      e.preventDefault();
-      setError("");
-
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (confirmPassword === newPassword) {
       try {
-        await login(email, password);
-        navigate("/dashboard");
-      } catch (err) {
-        alert(
-          err.response.data.message || "Invalid credentials. Please try again."
+        setLoading(true);
+        const res = await axios.post(
+          `${API_URL}/auth/resetPassword`,
+          {
+            email: user.email,
+            currentPassword: password,
+            newPassword: confirmPassword,
+          },
+          {
+            headers: {
+              Authorization: `Bearer ${token}`, // replace `token` with your actual token variable
+            },
+          }
         );
-        setError("Invalid email or password");
+        if (res.data.status == "success") {
+          toast.success("Password Reset Successfully");
+          setTimeout(() => {
+            logout();
+            navigate("/login");
+            dispatch({ type: "CLEAR_CONTEXT" });
+          }, 3000);
+        }
+      } catch (error) {
+        console.log(error);
+        toast.error(error.response.data.message);
+      } finally {
+        setLoading(false);
       }
-    },
-    [email, password]
-  );
-
+    } else {
+      toast.error("New password and Confirm password do not match");
+    }
+  };
   return (
     <div className=" bg-gray-50 flex flex-col justify-center  sm:px-6 lg:px-8">
+      <ToastContainer
+        position="top-right"
+        autoClose={3000}
+        hideProgressBar={false}
+        newestOnTop
+        closeOnClick
+        rtl={false}
+        pauseOnFocusLoss
+        draggable
+        pauseOnHover
+        theme="light"
+      />
       <div className="sm:mx-auto sm:w-full sm:max-w-md">
         <h2 className="mt-6 text-center text-2xl font-semibold text-gray-900">
           Reset your account password
@@ -53,7 +90,7 @@ const ResetPassword: React.FC = () => {
 
           <form className="space-y-6" onSubmit={handleSubmit}>
             <div>
-              <label htmlFor="password" className="label">
+              <label htmlFor="currentPassword" className="label">
                 Current Password
               </label>
               <div className="mt-1 relative rounded-md shadow-sm">
@@ -61,9 +98,9 @@ const ResetPassword: React.FC = () => {
                   <KeyRound className="h-5 w-5 text-gray-400" />
                 </div>
                 <input
-                  id="password"
-                  name="password"
-                  placeholder="password"
+                  id="currentPassword"
+                  name="currentPassword"
+                  placeholder="Current Password"
                   type={showPassword ? "text" : "password"}
                   autoComplete="current-password"
                   required
@@ -77,7 +114,7 @@ const ResetPassword: React.FC = () => {
               </div>
             </div>
             <div>
-              <label htmlFor="password" className="label">
+              <label htmlFor="newPassword" className="label">
                 New Password
               </label>
               <div className="mt-1 relative rounded-md shadow-sm">
@@ -85,11 +122,11 @@ const ResetPassword: React.FC = () => {
                   <KeyRound className="h-5 w-5 text-gray-400" />
                 </div>
                 <input
-                  id="password"
-                  name="password"
-                  placeholder="password"
+                  id="newPassword"
+                  name="newPassword"
+                  placeholder="New Password"
                   type={"password"}
-                  autoComplete="current-password"
+                  autoComplete="new-password"
                   required
                   value={newPassword}
                   onChange={(e) => setNewPassword(e.target.value)}
@@ -98,7 +135,7 @@ const ResetPassword: React.FC = () => {
               </div>
             </div>
             <div>
-              <label htmlFor="password" className="label">
+              <label htmlFor="confirmPassword" className="label">
                 Confirm New Password
               </label>
               <div className="mt-1 relative rounded-md shadow-sm">
@@ -106,11 +143,11 @@ const ResetPassword: React.FC = () => {
                   <KeyRound className="h-5 w-5 text-gray-400" />
                 </div>
                 <input
-                  id="password"
-                  name="password"
-                  placeholder="password"
+                  id="confirmPassword"
+                  name="confirmPassword"
+                  placeholder="Confirm Password"
                   type={showConfirmPassword ? "text" : "password"}
-                  autoComplete="current-password"
+                  autoComplete="confirm-password"
                   required
                   value={confirmPassword}
                   onChange={(e) => setConfirmPassword(e.target.value)}

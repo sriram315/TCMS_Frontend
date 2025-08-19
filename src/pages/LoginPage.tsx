@@ -1,7 +1,7 @@
 import React, { useCallback, useState } from "react";
 import { useAuth } from "../context/AuthContext";
 import { AtSign, KeyRound, Loader2, EyeOff, Eye } from "lucide-react";
-import { useNavigate } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 
 const LoginPage: React.FC = () => {
   const { login, loading } = useAuth();
@@ -75,9 +75,21 @@ const LoginPage: React.FC = () => {
             </div>
 
             <div>
-              <label htmlFor="password" className="label">
-                Password
-              </label>
+              <div className="flex items-start justify-between">
+                <label htmlFor="password" className="label">
+                  Password
+                </label>
+                <div className="text-sm">
+                  <Link
+                    to={"/forgotPassword"}
+                    state={email}
+                    className="font-semibold text-indigo-600 hover:text-indigo-500"
+                  >
+                    Forgot password?
+                  </Link>
+                </div>
+              </div>
+
               <div className="mt-1 relative rounded-md shadow-sm">
                 <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                   <KeyRound className="h-5 w-5 text-gray-400" />
