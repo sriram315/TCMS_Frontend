@@ -11,6 +11,7 @@ import LoginPage from "./pages/LoginPage";
 import ProjectDetail from "./pages/ProjectDetail";
 import ProjectEditForm from "./components/TestCaseManager/components/ProjectEditForm";
 import ResetPassword from "./pages/ResetPassword";
+import ForgotPassword from "./pages/ForgotPassword";
 
 const Dashboard = lazy(() => import("./pages/Dashboard"));
 const TestCases = lazy(() => import("./pages/TestCases"));
@@ -61,11 +62,7 @@ function App() {
             <Routes>
               <Route path="/" element={<Navigate to="/dashboard" replace />} />
               <Route path="/dashboard" index={true} element={<Dashboard />} />
-              <Route
-                path="/resetPassword"
-                index={true}
-                element={<ResetPassword />}
-              />
+              <Route path="/resetPassword" element={<ResetPassword />} />
               <Route path="/test-cases" element={<TestCases />} />
               <Route
                 path="/test-cases/edit/:id"
@@ -106,6 +103,7 @@ function App() {
         <Suspense fallback={<div>Loading...</div>}>
           <Routes>
             <Route path="/login" element={<LoginPage />} />
+            <Route path="/forgotPassword" element={<ForgotPassword />} />
             <Route path="/" element={<Navigate to="/login" replace />} />
             <Route path="*" element={<Navigate to="/login" replace />} />
           </Routes>
