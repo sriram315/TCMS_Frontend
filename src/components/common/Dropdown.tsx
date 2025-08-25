@@ -55,7 +55,10 @@ const Dropdown = ({ dataList, data, handleUpdate }) => {
                 >
                   <button
                     className="dropdown-item flex items-center w-full"
-                    onClick={() => handleUpdate(list)}
+                    onClick={() => {
+                      handleUpdate(list);
+                      setProfileOpen(false);
+                    }}
                   >
                     <span>{list}</span>
                   </button>

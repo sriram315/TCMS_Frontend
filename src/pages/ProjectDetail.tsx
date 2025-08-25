@@ -66,7 +66,7 @@ type TestRun = {
 const ProjectDetail: React.FC = () => {
   const navigate = useNavigate();
   const { user } = useAuth();
-  const { state } = useGlobalContext();
+  const { state, dispatch } = useGlobalContext();
   const { projects: globalProjects } = state;
   const containerRef = useRef(null);
   const [project, setProject] = useState({});
@@ -86,6 +86,7 @@ const ProjectDetail: React.FC = () => {
     setProject(currentProject.length > 0 ? currentProject[0] : {});
   }, [globalProjects]);
   useEffect(() => {
+    dispatch({ type: "SET_SEARCH", payload: { text: "", isSearch: false } });
     const handleClickOutside = (event) => {
       if (
         containerRef.current &&
@@ -156,7 +157,7 @@ const ProjectDetail: React.FC = () => {
     navigate(`/project/edit/${project._id}`);
   };
   return (
-    <div className="">
+    <div className="relative">
       <ToastContainer />
       <Breadcrumbs
         items={[
@@ -270,6 +271,10 @@ const ProjectDetail: React.FC = () => {
           <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
             <h3 className="text-lg font-medium text-gray-900 mb-4">Details</h3>
             <dl className="grid grid-cols-[120px_1fr] gap-3 text-sm">
+              <dt className="font-medium text-gray-500">Type:</dt>
+              <dd className="text-gray-900 truncate max-w-72">
+                {project && project?.projectType}
+              </dd>
               <dt className="font-medium text-gray-500">Created by:</dt>
               <dd className="text-gray-900 truncate max-w-72">
                 {project && project?.createdBy?.name}
@@ -306,7 +311,7 @@ const ProjectDetail: React.FC = () => {
           </div>
         </div>
       </div>
-      <div className="flex-1 overflow-x-auto ">
+      <div className="flex-1 overflow-x-auto  ">
         <div className="bg-white rounded-lg shadow-sm border border-gray-200 ">
           <div className="overflow-x-auto ">
             <table className="table ">
@@ -335,7 +340,7 @@ const ProjectDetail: React.FC = () => {
                       />
                     </div>
                     {filterStatus.status && (
-                      <div className=" bg-white relative">
+                      <div className=" bg-white ">
                         <Checkbox
                           people={status}
                           statusFilter={statusFilter}

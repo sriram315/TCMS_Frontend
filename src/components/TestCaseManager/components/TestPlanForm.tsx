@@ -44,7 +44,7 @@ const initialState: TestCase = {
 };
 
 export default function TestPlanForm({ onSave, selected }: TestPlanFormProps) {
-  const { state } = useGlobalContext();
+  const { state, dispatch } = useGlobalContext();
   const { testCases, projects } = state;
   const [initialValues, setInitialValues] = useState<TestCase>(initialState);
   const [users, setUsers] = useState<
@@ -58,7 +58,6 @@ export default function TestPlanForm({ onSave, selected }: TestPlanFormProps) {
   const [modules, setModules] = useState([]);
   const [allTestCases, setAllTestCases] = useState<any[]>([]);
   const [moduleErrors, setModuleErrors] = useState<string[]>([]);
-  const [filteredUserTestCases, setFilteredUserTestCases] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const navigate = useNavigate();
   const { user: currentUser } = useAuth();
@@ -66,6 +65,7 @@ export default function TestPlanForm({ onSave, selected }: TestPlanFormProps) {
   const userId: string =
     JSON.parse(sessionStorage.getItem("user") || "{}")?._id || "";
   useEffect(() => {
+    dispatch({ type: "SET_SEARCH", isSearch: false });
     if (testCases.length > 0) {
       const updatedData = testCases.map((prevData) => ({
         ...prevData,
@@ -80,6 +80,7 @@ export default function TestPlanForm({ onSave, selected }: TestPlanFormProps) {
       .get(`${API_URL}/users`)
       .then((response) => {
         const data = response.data.data.users;
+
         const filteredUsers =
           currentUser?.role.toLowerCase() === "admin"
             ? data.filter(
@@ -105,7 +106,6 @@ export default function TestPlanForm({ onSave, selected }: TestPlanFormProps) {
             .map((testCase) => testCase.module);
 
           setModules([...new Set(filteredModules)]);
-          setFilteredUserTestCases(filtered);
         }
       })
       .catch((error) => {
@@ -389,6 +389,7 @@ export default function TestPlanForm({ onSave, selected }: TestPlanFormProps) {
                       }`}
                     >
                       <option value="">Select</option>
+
                       {projects
                         .filter(
                           (project) =>
@@ -407,74 +408,76 @@ export default function TestPlanForm({ onSave, selected }: TestPlanFormProps) {
                     />
                   </div>
 
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">
-                        Browser Type
-                      </label>
-                      <div
-                        role="group"
-                        aria-labelledby="checkbox-group"
-                        className="space-y-1"
-                      >
-                        {browserTypes.map((type, index) => (
-                          <div key={index}>
-                            <label
-                              key={type}
-                              className="inline-flex items-center space-x-2"
-                            >
-                              <Field
-                                type="checkbox"
-                                name="browserType"
-                                value={type}
-                                className="form-checkbox text-indigo-600"
-                              />
-                              <span className="text-gray-700">{type}</span>
-                            </label>
-                          </div>
-                        ))}
+                  {projectId.length > 0 && (
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">
+                          Browser Type
+                        </label>
+                        <div
+                          role="group"
+                          aria-labelledby="checkbox-group"
+                          className="space-y-1"
+                        >
+                          {browserTypes.map((type, index) => (
+                            <div key={index}>
+                              <label
+                                key={type}
+                                className="inline-flex items-center space-x-2"
+                              >
+                                <Field
+                                  type="checkbox"
+                                  name="browserType"
+                                  value={type}
+                                  className="form-checkbox text-indigo-600"
+                                />
+                                <span className="text-gray-700">{type}</span>
+                              </label>
+                            </div>
+                          ))}
+                        </div>
+                        <ErrorMessage
+                          name="browserType"
+                          component="div"
+                          className="text-red-500 text-xs mt-1"
+                        />
                       </div>
-                      <ErrorMessage
-                        name="browserType"
-                        component="div"
-                        className="text-red-500 text-xs mt-1"
-                      />
-                    </div>
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">
-                        OS Type
-                      </label>
-                      <div
-                        role="group"
-                        aria-labelledby="checkbox-group"
-                        className="space-y-1"
-                      >
-                        {osTypes.map((type, index) => (
-                          <div key={index}>
-                            <label
-                              key={type}
-                              className="inline-flex items-center space-x-2"
-                            >
-                              <Field
-                                type="checkbox"
-                                name="osType"
-                                value={type}
-                                className="form-checkbox text-indigo-600"
-                              />
-                              <span className="text-gray-700">{type}</span>
-                            </label>
-                          </div>
-                        ))}
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">
+                          OS Type
+                        </label>
+                        <div
+                          role="group"
+                          aria-labelledby="checkbox-group"
+                          className="space-y-1"
+                        >
+                          {osTypes.map((type, index) => (
+                            <div key={index}>
+                              <label
+                                key={type}
+                                className="inline-flex items-center space-x-2"
+                              >
+                                <Field
+                                  type="checkbox"
+                                  name="osType"
+                                  value={type}
+                                  className="form-checkbox text-indigo-600"
+                                />
+                                <span className="text-gray-700">{type}</span>
+                              </label>
+                            </div>
+                          ))}
+                        </div>
+                        <ErrorMessage
+                          name="osType"
+                          component="div"
+                          className="text-red-500 text-xs mt-1"
+                        />
                       </div>
-                      <ErrorMessage
-                        name="osType"
-                        component="div"
-                        className="text-red-500 text-xs mt-1"
-                      />
                     </div>
-                  </div>
+                  )}
 
-                  {assignments.length > 0 && (
+                  {projectId.length > 0 && assignments.length > 0 && (
                     <div className="mt-6">
                       <h3 className="text-lg font-semibold mb-2">
                         Browser & OS Combinations
@@ -544,11 +547,18 @@ export default function TestPlanForm({ onSave, selected }: TestPlanFormProps) {
                                   className="border px-2 py-1 rounded w-full"
                                 >
                                   <option value="">Select Assignee</option>
-                                  {users.map((user) => (
-                                    <option key={user._id} value={user.name}>
-                                      {user.name}
-                                    </option>
-                                  ))}
+                                  {projects
+                                    .filter(
+                                      (project) =>
+                                        Array.isArray(project.assignedTo) &&
+                                        project.createdBy._id === userId &&
+                                        project._id === projectId
+                                    )?.[0]
+                                    ?.assignedTo.map((user) => (
+                                      <option key={user._id} value={user.name}>
+                                        {user.name}
+                                      </option>
+                                    ))}
                                 </select>
                               </td>
                             </tr>

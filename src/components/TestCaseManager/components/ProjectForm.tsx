@@ -15,6 +15,7 @@ import { useNavigate } from "react-router-dom";
 import { useAuth } from "../../../context/AuthContext";
 import { API_URL } from "../../../config";
 import { ChevronLeft } from "lucide-react";
+import { useGlobalContext } from "../../../context/GlobalContext";
 
 // Define the TestCase interface (consistent with TestCaseGrid.tsx)
 interface TestCase {
@@ -61,6 +62,7 @@ export default function ProjectForm({
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const navigate = useNavigate();
   const { user: currentUser } = useAuth();
+  const { fetchProjects } = useGlobalContext();
   useEffect(() => {
     if (selected) {
       setInitialValues(selected);
@@ -112,7 +114,7 @@ export default function ProjectForm({
         }
       );
       console.log("Project created:", response.data);
-
+      fetchProjects();
       toast.success("Project saved successfully!", {
         position: "top-right",
         autoClose: 3000,
@@ -216,18 +218,18 @@ export default function ProjectForm({
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div>
                     <label
-                      htmlFor="type"
+                      htmlFor="projectType"
                       className="block text-sm font-medium text-gray-700 mb-1"
                     >
                       Type
                     </label>
                     <Field
                       as="select"
-                      id="type"
-                      name="type"
+                      id="projectType"
+                      name="projectType"
                       className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-1 focus:ring-indigo-500 focus:border-indigo-500 text-gray-700 ${
-                        errors["type" as keyof TestCase] &&
-                        touched["type" as keyof TestCase]
+                        errors["projectType" as keyof TestCase] &&
+                        touched["projectType" as keyof TestCase]
                           ? "border-red-500"
                           : "border-gray-300"
                       }`}

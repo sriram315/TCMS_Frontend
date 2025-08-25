@@ -1,5 +1,6 @@
 import ExcelJS from "exceljs";
 import { saveAs } from "file-saver";
+import { toast } from "react-toastify";
 // import toast from "your-toast-library"; // Uncomment and adjust as per your project
 
 type WeekTestcaseData = {
@@ -117,7 +118,7 @@ const downloadExcelByWeeks = async (
     });
 
     saveAs(blob, "Testcases.xlsx");
-    // toast.success("Excel downloaded successfully!");
+    toast.success("Excel downloaded successfully!");
   } catch (error) {
     console.error("Excel download error:", error);
     // toast.error("Failed to download Excel file.");

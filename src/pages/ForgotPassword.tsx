@@ -18,14 +18,12 @@ const ForgotPassword: React.FC = () => {
   }, [location.state]);
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    console.log({ email });
 
     try {
       setLoading(true);
       const res = await axios.post(`${API_URL}/auth/forgotPassword`, {
         email,
       });
-      console.log(res);
 
       toast.success(res.data.message);
       if (res.data.status == "success") {

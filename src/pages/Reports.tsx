@@ -43,7 +43,14 @@ const CustomTooltip = ({ active, payload, label }) => {
 
 const Reports: React.FC = () => {
   const { state, dispatch } = useGlobalContext();
-  const { projects, testCases } = state;
+  const {
+    projects,
+    testCases,
+    isProjectsLoading,
+    isActivitiesLoading,
+    isTestCaseLoading,
+    isTestRunsLoading,
+  } = state;
   const [pieChartData, setPieChartData] = useState<any>([]);
   const [chartData, setChartData] = useState<any[]>([]);
 
@@ -185,212 +192,237 @@ const Reports: React.FC = () => {
   }, [generateMonthlyStats]);
 
   return (
-    <div>
-      <PageHeader
-        title="Reports"
-        description="Generate and analyze test reports for your project"
-      />
-
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
-        <div className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
-          <div className="p-4 border-b border-gray-200 flex justify-between items-center">
-            <h3 className="text-lg font-semibold text-gray-900 flex items-center">
-              <PieChartIcon className="h-5 w-5  text-gray-500 mr-2" />
-              Test Results Overview
-            </h3>
-            <div className="flex items-center space-x-2"></div>
+    <>
+      {isProjectsLoading &&
+      isActivitiesLoading &&
+      isTestCaseLoading &&
+      isTestRunsLoading ? (
+        <div>
+          <div className="grid grid-cols-2 gap-6  mb-6">
+            <div className="h-80 bg-gray-300 rounded-lg animate-pulse"></div>
+            <div className=" h-80 bg-gray-300 rounded-lg animate-pulse"></div>
           </div>
-          <div className="p-6">
-            {pieChartData.every(
-              (entry: { count: number }) => entry.count === 0
-            ) ? (
-              <div className="flex justify-center items-center h-64">
-                <span className="text-gray-500">No data available</span>
-              </div>
-            ) : (
-              <ResponsiveContainer width="100%" height={300}>
-                <PieChart>
-                  <Pie
-                    data={pieChartData}
-                    cx="50%"
-                    cy="50%"
-                    innerRadius={80}
-                    outerRadius={100}
-                    paddingAngle={2}
-                    dataKey="value"
-                    nameKey="name"
-                    labelLine={false}
-                  >
-                    {pieChartData.map((entry: any, index: any) => (
-                      <Cell
-                        key={`cell-${index}`}
-                        fill={(entry as { color: string }).color}
-                      />
-                    ))}
-                  </Pie>
-                  <Tooltip
-                    formatter={(value, name, props) => `${props.payload.count}`}
-                  />
-                </PieChart>
-              </ResponsiveContainer>
-            )}
+          <div className=" h-72 bg-gray-300 rounded-lg animate-pulse mb-6"></div>
+          <div className="flex flex-col w-full gap-1">
+            {[...Array(14)].map((_, i) => (
+              <div className="h-10  bg-gray-300 rounded animate-pulse"></div>
+            ))}
+          </div>
+        </div>
+      ) : (
+        <div>
+          <PageHeader
+            title="Reports"
+            description="Generate and analyze test reports for your project"
+          />
 
-            <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mt-4">
-              {pieChartData.map((entry: any, index: any) => (
-                <div key={index} className="flex flex-col items-center">
-                  <div className="flex items-center mb-1">
-                    <span
-                      className="w-3 h-3 rounded-full mr-2"
-                      style={{
-                        backgroundColor: (entry as { color: string }).color,
-                      }}
-                    ></span>
-                    <span className="text-sm font-medium text-gray-700">
-                      {(entry as { name: string }).name}
-                    </span>
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
+            <div className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
+              <div className="p-4 border-b border-gray-200 flex justify-between items-center">
+                <h3 className="text-lg font-semibold text-gray-900 flex items-center">
+                  <PieChartIcon className="h-5 w-5  text-gray-500 mr-2" />
+                  Test Results Overview
+                </h3>
+                <div className="flex items-center space-x-2"></div>
+              </div>
+              <div className="p-6">
+                {pieChartData.every(
+                  (entry: { count: number }) => entry.count === 0
+                ) ? (
+                  <div className="flex justify-center items-center h-64">
+                    <span className="text-gray-500">No data available</span>
                   </div>
-                  <span className="text-lg font-semibold text-gray-900">
-                    {isNaN((entry as { value: number }).value)
-                      ? 0
-                      : (entry as { value: number }).value}
-                    %
-                  </span>
+                ) : (
+                  <ResponsiveContainer width="100%" height={300}>
+                    <PieChart>
+                      <Pie
+                        data={pieChartData}
+                        cx="50%"
+                        cy="50%"
+                        innerRadius={80}
+                        outerRadius={100}
+                        paddingAngle={2}
+                        dataKey="value"
+                        nameKey="name"
+                        labelLine={false}
+                      >
+                        {pieChartData.map((entry: any, index: any) => (
+                          <Cell
+                            key={`cell-${index}`}
+                            fill={(entry as { color: string }).color}
+                          />
+                        ))}
+                      </Pie>
+                      <Tooltip
+                        formatter={(value, name, props) =>
+                          `${props.payload.count}`
+                        }
+                      />
+                    </PieChart>
+                  </ResponsiveContainer>
+                )}
+
+                <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mt-4">
+                  {pieChartData.map((entry: any, index: any) => (
+                    <div key={index} className="flex flex-col items-center">
+                      <div className="flex items-center mb-1">
+                        <span
+                          className="w-3 h-3 rounded-full mr-2"
+                          style={{
+                            backgroundColor: (entry as { color: string }).color,
+                          }}
+                        ></span>
+                        <span className="text-sm font-medium text-gray-700">
+                          {(entry as { name: string }).name}
+                        </span>
+                      </div>
+                      <span className="text-lg font-semibold text-gray-900">
+                        {isNaN((entry as { value: number }).value)
+                          ? 0
+                          : (entry as { value: number }).value}
+                        %
+                      </span>
+                    </div>
+                  ))}
                 </div>
-              ))}
+              </div>
+            </div>
+            <div className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
+              <div className="p-4 border-b border-gray-200 flex justify-between items-center">
+                <h3 className="text-lg font-semibold text-gray-900 flex items-center">
+                  <LineChartIcon className="h-5 w-5 text-gray-500 mr-2" />
+                  Test Execution Trend Monthly
+                </h3>
+              </div>
+              <div className="p-6">
+                {testTrendData.length === 0 ? (
+                  <div className="flex justify-center items-center h-64">
+                    <span className="text-gray-500">No data available</span>
+                  </div>
+                ) : (
+                  <ResponsiveContainer width="100%" height={300}>
+                    <LineChart
+                      data={testTrendData}
+                      margin={{ top: 5, right: 30, left: 20, bottom: 5 }}
+                    >
+                      <CartesianGrid strokeDasharray="3 3" />
+                      <XAxis dataKey="name" />
+                      <YAxis />
+                      <Tooltip />
+                      <Legend />
+                      <Line
+                        type="monotone"
+                        name="Passed"
+                        dataKey="passed"
+                        stroke="#22C55E"
+                        strokeWidth={2}
+                        activeDot={{ r: 8 }}
+                      />
+                      <Line
+                        type="monotone"
+                        name="Failed"
+                        dataKey="failed"
+                        stroke="#EF4444"
+                        strokeWidth={2}
+                      />
+                    </LineChart>
+                  </ResponsiveContainer>
+                )}
+              </div>
+            </div>
+          </div>
+
+          <div className=" gap-6 mb-6">
+            <div className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
+              <div className="p-4 border-b border-gray-200 flex justify-between items-center">
+                <h3 className="text-lg font-semibold text-gray-900 flex items-center">
+                  <BarChart className="h-5 w-5 text-gray-500 mr-2" />
+                  Latest Modules
+                </h3>
+              </div>
+              <div className="p-6">
+                {chartData.length === 0 ? (
+                  <div className="flex justify-center items-center h-64">
+                    <span className="text-gray-500">No data available</span>
+                  </div>
+                ) : (
+                  <ResponsiveContainer width="100%" height={300}>
+                    <ReBarChart
+                      data={chartData}
+                      margin={{ top: 5, right: 30, left: 20, bottom: 5 }}
+                    >
+                      <CartesianGrid strokeDasharray="3 3" />
+                      <XAxis dataKey="name" />
+                      <YAxis />
+                      <Tooltip content={<CustomTooltip />} />
+                      <Legend />
+                      <Bar name="Tested" dataKey="Tested" fill="#3B82F6" />
+                      <Bar name="Untested" dataKey="Untested" fill="#9CA3AF" />
+                    </ReBarChart>
+                  </ResponsiveContainer>
+                )}
+              </div>
+            </div>
+          </div>
+
+          <div className="bg-white rounded-lg shadow-sm border border-gray-200">
+            <div className="p-4 border-b border-gray-200">
+              <h3 className="text-lg font-semibold text-gray-900">
+                Recent Reports
+              </h3>
+            </div>
+            <div className="overflow-x-auto">
+              <table className="table">
+                <thead>
+                  <tr>
+                    <th scope="col">Report Name</th>
+                    <th scope="col">Module</th>
+                    <th scope="col">Created By</th>
+                    <th scope="col">Date</th>
+                    <th scope="col">Status</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {testCases?.length === 0 ? (
+                    <tr>
+                      <td colSpan={5} className="text-center text-gray-500">
+                        No data available.
+                      </td>
+                    </tr>
+                  ) : (
+                    testCases
+                      ?.sort(
+                        (a, b) => new Date(b.updatedAt) - new Date(a.updatedAt)
+                      )
+                      .map((data: any, index: any) => (
+                        <tr key={index} className="hover:bg-gray-50">
+                          <td className="font-medium text-gray-900 max-w-3 truncate">
+                            {data.title}
+                          </td>
+                          <td className="max-w-2 truncate">
+                            <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-primary-100 text-primary-800 ">
+                              {data.module}
+                            </span>
+                          </td>
+                          <td className="truncate max-w-3">{data.createdBy}</td>
+                          <td>
+                            {data?.updatedAt &&
+                              format(
+                                new Date(data?.updatedAt),
+                                "MMMM dd, yyyy"
+                              )}
+                          </td>
+                          <td>{data.status}</td>
+                        </tr>
+                      ))
+                  )}
+                </tbody>
+              </table>
             </div>
           </div>
         </div>
-        <div className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
-          <div className="p-4 border-b border-gray-200 flex justify-between items-center">
-            <h3 className="text-lg font-semibold text-gray-900 flex items-center">
-              <LineChartIcon className="h-5 w-5 text-gray-500 mr-2" />
-              Test Execution Trend Monthly
-            </h3>
-          </div>
-          <div className="p-6">
-            {testTrendData.length === 0 ? (
-              <div className="flex justify-center items-center h-64">
-                <span className="text-gray-500">No data available</span>
-              </div>
-            ) : (
-              <ResponsiveContainer width="100%" height={300}>
-                <LineChart
-                  data={testTrendData}
-                  margin={{ top: 5, right: 30, left: 20, bottom: 5 }}
-                >
-                  <CartesianGrid strokeDasharray="3 3" />
-                  <XAxis dataKey="name" />
-                  <YAxis />
-                  <Tooltip />
-                  <Legend />
-                  <Line
-                    type="monotone"
-                    name="Passed"
-                    dataKey="passed"
-                    stroke="#22C55E"
-                    strokeWidth={2}
-                    activeDot={{ r: 8 }}
-                  />
-                  <Line
-                    type="monotone"
-                    name="Failed"
-                    dataKey="failed"
-                    stroke="#EF4444"
-                    strokeWidth={2}
-                  />
-                </LineChart>
-              </ResponsiveContainer>
-            )}
-          </div>
-        </div>
-      </div>
-
-      <div className=" gap-6 mb-6">
-        <div className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
-          <div className="p-4 border-b border-gray-200 flex justify-between items-center">
-            <h3 className="text-lg font-semibold text-gray-900 flex items-center">
-              <BarChart className="h-5 w-5 text-gray-500 mr-2" />
-              Latest Modules
-            </h3>
-          </div>
-          <div className="p-6">
-            {chartData.length === 0 ? (
-              <div className="flex justify-center items-center h-64">
-                <span className="text-gray-500">No data available</span>
-              </div>
-            ) : (
-              <ResponsiveContainer width="100%" height={300}>
-                <ReBarChart
-                  data={chartData}
-                  margin={{ top: 5, right: 30, left: 20, bottom: 5 }}
-                >
-                  <CartesianGrid strokeDasharray="3 3" />
-                  <XAxis dataKey="name" />
-                  <YAxis />
-                  <Tooltip content={<CustomTooltip />} />
-                  <Legend />
-                  <Bar name="Tested" dataKey="Tested" fill="#3B82F6" />
-                  <Bar name="Untested" dataKey="Untested" fill="#9CA3AF" />
-                </ReBarChart>
-              </ResponsiveContainer>
-            )}
-          </div>
-        </div>
-      </div>
-
-      <div className="bg-white rounded-lg shadow-sm border border-gray-200">
-        <div className="p-4 border-b border-gray-200">
-          <h3 className="text-lg font-semibold text-gray-900">
-            Recent Reports
-          </h3>
-        </div>
-        <div className="overflow-x-auto">
-          <table className="table">
-            <thead>
-              <tr>
-                <th scope="col">Report Name</th>
-                <th scope="col">Module</th>
-                <th scope="col">Created By</th>
-                <th scope="col">Date</th>
-                <th scope="col">Status</th>
-              </tr>
-            </thead>
-            <tbody>
-              {testCases?.length === 0 ? (
-                <tr>
-                  <td colSpan={5} className="text-center text-gray-500">
-                    No data available.
-                  </td>
-                </tr>
-              ) : (
-                testCases
-                  ?.sort(
-                    (a, b) => new Date(b.updatedAt) - new Date(a.updatedAt)
-                  )
-                  .map((data: any, index: any) => (
-                    <tr key={index} className="hover:bg-gray-50">
-                      <td className="font-medium text-gray-900 max-w-3 truncate">
-                        {data.title}
-                      </td>
-                      <td className="max-w-2 truncate">
-                        <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-primary-100 text-primary-800 ">
-                          {data.module}
-                        </span>
-                      </td>
-                      <td className="truncate max-w-3">{data.createdBy}</td>
-                      <td>
-                        {data?.updatedAt &&
-                          format(new Date(data?.updatedAt), "MMMM dd, yyyy")}
-                      </td>
-                      <td>{data.status}</td>
-                    </tr>
-                  ))
-              )}
-            </tbody>
-          </table>
-        </div>
-      </div>
-    </div>
+      )}
+    </>
   );
 };
 
