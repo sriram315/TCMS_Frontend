@@ -103,7 +103,7 @@ export default function ProjectEditForm({
   ) => {
     try {
       setIsLoading(true);
-      await axios.put(
+      const res = await axios.put(
         `${API_URL}/projects/${id}`,
         { ...values, updatedBy: user._id },
         {
@@ -112,6 +112,8 @@ export default function ProjectEditForm({
           },
         }
       );
+      console.log(res.data);
+
       fetchProjects();
       toast.success("Project updated successfully!", {
         position: "top-right",
@@ -234,18 +236,18 @@ export default function ProjectEditForm({
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <div>
                       <label
-                        htmlFor="type"
+                        htmlFor="projectType"
                         className="block text-sm font-medium text-gray-700 mb-1"
                       >
                         Type
                       </label>
                       <Field
                         as="select"
-                        id="type"
-                        name="type"
+                        id="projectType"
+                        name="projectType"
                         className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-1 focus:ring-indigo-500 focus:border-indigo-500 text-gray-700 ${
-                          errors["type" as keyof TestCase] &&
-                          touched["type" as keyof TestCase]
+                          errors["projectType" as keyof TestCase] &&
+                          touched["projectType" as keyof TestCase]
                             ? "border-red-500"
                             : "border-gray-300"
                         }`}
@@ -255,7 +257,7 @@ export default function ProjectEditForm({
                         <option value="Both">Both</option>
                       </Field>
                       <ErrorMessage
-                        name="type"
+                        name="projectType"
                         component="div"
                         className="text-red-500 text-xs mt-1"
                       />

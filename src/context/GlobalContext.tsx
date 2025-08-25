@@ -11,7 +11,7 @@ import { API_URL } from "../config";
 import { useAuth } from "./AuthContext";
 import {
   calculateTestRunStats,
-  generateWeeklyStats,
+  generateDailyStats,
 } from "../utils/statsConversion";
 
 type TestStaus = {
@@ -24,17 +24,22 @@ type TestStaus = {
 
 type GlobalType = {
   projects: any | [];
+  isProjectsLoading: boolean;
   testStatus: TestStaus;
   testProgressData: any | [];
   testRuns: any | [];
+  isTestRunsLoading?: boolean;
   activities: any | [];
+  isActivitiesLoading?: boolean;
   testStatusData: any | [];
   testCases: any | [];
+  isTestCaseLoading?: boolean;
   search: object;
 };
 
 const initialState: GlobalType = {
   projects: [],
+  isProjectsLoading: false,
   testStatus: {
     Passed: 0,
     Failed: 0,
@@ -44,20 +49,27 @@ const initialState: GlobalType = {
   },
   testProgressData: [],
   testRuns: [],
+  isTestRunsLoading: false,
   testStatusData: [],
   activities: [],
+  isActivitiesLoading: false,
   testCases: [],
+  isTestCaseLoading: false,
   search: { text: "", isSearch: false },
 };
 
 type GlobalAction =
   | { type: "SET_PROJECTS"; payload: any[] }
+  | { type: "SET_PROJECTS_STATUS"; payload: boolean }
   | { type: "SET_UPDATE_TEST_STATUS"; payload: TestStaus }
   | { type: "SET_TEST_PROGRESS_DATA"; payload: any[] }
   | { type: "SET_TEST_RUNS"; payload: any[] }
+  | { type: "SET_TEST_RUNS_STATUS"; payload: boolean }
   | { type: "SET_TEST_STATUS_DATA"; payload: any[] }
   | { type: "SET_ACTIVITIES"; payload: any[] }
+  | { type: "SET_ACTIVITIES_STATUS"; payload: boolean }
   | { type: "SET_TESTCASES"; payload: any[] }
+  | { type: "SET_TESTCASES_STATUS"; payload: boolean }
   | { type: "SET_SEARCH"; payload: object }
   | { type: "CLEAR_CONTEXT" };
 
@@ -65,18 +77,26 @@ const globalReducer = (state: GlobalType, action: GlobalAction): GlobalType => {
   switch (action.type) {
     case "SET_PROJECTS":
       return { ...state, projects: action.payload };
+    case "SET_PROJECTS_STATUS":
+      return { ...state, isProjectsLoading: action.payload };
     case "SET_UPDATE_TEST_STATUS":
       return { ...state, testStatus: action.payload };
     case "SET_TEST_PROGRESS_DATA":
       return { ...state, testProgressData: action.payload };
     case "SET_TEST_RUNS":
       return { ...state, testRuns: action.payload };
+    case "SET_TEST_RUNS_STATUS":
+      return { ...state, isTestRunsLoading: action.payload };
     case "SET_TEST_STATUS_DATA":
       return { ...state, testStatusData: action.payload };
     case "SET_ACTIVITIES":
       return { ...state, activities: action.payload };
+    case "SET_ACTIVITIES_STATUS":
+      return { ...state, isActivitiesLoading: action.payload };
     case "SET_TESTCASES":
       return { ...state, testCases: action.payload };
+    case "SET_TESTCASES_STATUS":
+      return { ...state, isTestCaseLoading: action.payload };
     case "SET_SEARCH":
       return { ...state, search: action.payload };
     case "CLEAR_CONTEXT":
@@ -128,12 +148,15 @@ export const GlobalProvider = ({ children }: { children: ReactNode }) => {
   };
 
   const fetchProjects = useCallback(async () => {
+    dispatch({ type: "SET_PROJECTS_STATUS", payload: true });
     try {
       const { data } = await axios.get(`${API_URL}/projects`);
 
       dispatch({ type: "SET_PROJECTS", payload: filteredProjects(data) });
     } catch (error) {
       console.error("Error fetching projects:", error);
+    } finally {
+      dispatch({ type: "SET_PROJECTS_STATUS", payload: false });
     }
   }, [filteredProjects]);
 
@@ -157,42 +180,23 @@ export const GlobalProvider = ({ children }: { children: ReactNode }) => {
   };
 
   const fetchTestRuns = useCallback(async () => {
+    dispatch({ type: "SET_TEST_RUNS_STATUS", payload: true });
     try {
       const { data } = await axios.get(`${API_URL}/test-runs`);
 
       dispatch({ type: "SET_TEST_RUNS", payload: filteredTestRuns(data) });
     } catch (error) {
       console.error("Error fetching test runs:", error);
+    } finally {
+      dispatch({ type: "SET_TEST_RUNS_STATUS", payload: false });
     }
   }, [filteredTestRuns]);
 
   const fetchTestCases = useCallback(async () => {
+    dispatch({ type: "SET_TESTCASES_STATUS", payload: true });
     try {
       const { data } = await axios.get(`${API_URL}/testcases`);
 
-      // const filteredData =
-      //   String(role).toLowerCase() === "superadmin"
-      //     ? data
-      //     : String(role).toLowerCase() === "admin"
-      //     ? state.projects
-      //         .filter(
-      //           (project: { createdBy: { _id: any } }) =>
-      //             currentUser && project?.createdBy?._id === currentUser._id
-      //         )
-      //         .flatMap((project: { testCases: any }) => project.testCases)
-      //     : state.projects.flatMap((project: { assignedTo: any; _id: any }) => {
-      //         const isAssigned = project.assignedTo.some(
-      //           (user: { _id: any }) => user._id === currentUser?._id
-      //         );
-
-      //         if (isAssigned) {
-      //           return data.filter(
-      //             (item: { projectId: string }) =>
-      //               item.projectId === project._id
-      //           );
-      //         }
-      //         return [];
-      //       });
       const filteredData =
         String(role).toLowerCase() === "superadmin"
           ? data
@@ -226,7 +230,7 @@ export const GlobalProvider = ({ children }: { children: ReactNode }) => {
       dispatch({ type: "SET_TESTCASES", payload: filteredData });
       dispatch({
         type: "SET_TEST_PROGRESS_DATA",
-        payload: generateWeeklyStats(filteredData),
+        payload: generateDailyStats(filteredData),
       });
       // Use the helper function
       const { stats } = calculateTestRunStats(filteredData);
@@ -269,17 +273,20 @@ export const GlobalProvider = ({ children }: { children: ReactNode }) => {
       });
     } catch (error) {
       console.error("Error fetching test cases:", error);
+    } finally {
+      dispatch({ type: "SET_TESTCASES_STATUS", payload: false });
     }
   }, [
     role,
     state.projects,
-    generateWeeklyStats,
+    generateDailyStats,
     calculateTestRunStats,
     currentUser ? currentUser._id : null,
     name,
   ]);
 
   const fetchActivity = useCallback(async () => {
+    dispatch({ type: "SET_ACTIVITIES_STATUS", payload: true });
     try {
       const response = await axios.get(`${API_URL}/recent-activity`);
       const data = response.data;
@@ -306,6 +313,8 @@ export const GlobalProvider = ({ children }: { children: ReactNode }) => {
       dispatch({ type: "SET_ACTIVITIES", payload: filteredData });
     } catch (error) {
       console.error("Error fetching activities:", error);
+    } finally {
+      dispatch({ type: "SET_ACTIVITIES_STATUS", payload: false });
     }
   }, [API_URL, role, userId]);
 

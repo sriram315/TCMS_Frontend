@@ -13,6 +13,7 @@ import {
 import Breadcrumbs from "../../common/Breadcrumbs";
 import PageHeader from "../../common/PageHeader";
 import { API_URL } from "../../../config";
+import { useGlobalContext } from "../../../context/GlobalContext";
 
 const statusColors = {
   Completed: "bg-success-100 text-success-800 border-success-200",
@@ -82,6 +83,7 @@ const TestPlanRuns: React.FC = () => {
   const data = location.state;
 
   const { user: currentUser } = useAuth();
+  const { dispatch } = useGlobalContext();
 
   useEffect(() => {
     const fetchTestRuns = async () => {
@@ -131,6 +133,7 @@ const TestPlanRuns: React.FC = () => {
   }, [users, data._id]);
 
   useEffect(() => {
+    dispatch({ type: "SET_SEARCH", payload: { text: "", isSearch: false } });
     axios
       .get(`${API_URL}/users`)
       .then((response) => {

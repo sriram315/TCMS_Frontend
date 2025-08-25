@@ -14,6 +14,8 @@ import PageHeader from "../../common/PageHeader";
 import { format } from "date-fns";
 import { API_URL } from "../../../config";
 import downloadExcel from "../../../utils/downloadExcel";
+import { useGlobalContext } from "../../../context/GlobalContext";
+import { ToastContainer } from "react-toastify";
 const TestPlanRunsDetail: React.FC = () => {
   const location = useLocation();
   const testPlanId = location.state?.testRun?.testPlanId || "";
@@ -26,10 +28,12 @@ const TestPlanRunsDetail: React.FC = () => {
   const title = `${location.state?.testRun.osType} - ${location.state?.testRun.browser} - ${location.state?.testRun.assigneeName}`;
   const [users, setUsers] = useState<any>([]); // Use location state or fallback to testRunData
   const [data, setData] = useState<any>([]); // Use location state or fallback to testRunData
+  const { dispatch } = useGlobalContext();
 
   const [status, setStatus] = useState<any>(Date.now());
   const navigate = useNavigate();
   useEffect(() => {
+    dispatch({ type: "SET_SEARCH", payload: { text: "", isSearch: false } });
     axios
       .get(`${API_URL}/users`)
       .then((response) => {
@@ -123,6 +127,18 @@ const TestPlanRunsDetail: React.FC = () => {
 
   return (
     <div>
+      <ToastContainer
+        position="top-right"
+        autoClose={3000}
+        hideProgressBar={false}
+        newestOnTop
+        closeOnClick
+        rtl={false}
+        pauseOnFocusLoss
+        draggable
+        pauseOnHover
+        theme="light"
+      />
       <div
         className="inline-flex justify-center items-center text-lg font-medium text-gray-900 cursor-pointer"
         onClick={() => navigate(-1)}
@@ -239,7 +255,10 @@ const TestPlanRunsDetail: React.FC = () => {
               </h3>
 
               <dl className="grid grid-cols-[100px_1fr] gap-3 text-sm mb-5">
-                <dt className="font-medium text-gray-500">Assigned to:</dt>
+                <dt className="font-medium text-gray-500 inline-flex justify-between gap-2  ">
+                  <span>Assigned to</span>
+                  <span>:</span>
+                </dt>
                 <dd className="text-gray-900">
                   <div className="flex items-center">
                     <div className="h-8 w-8 rounded-full mr-2 border flex items-center justify-center font-semibold">
@@ -249,12 +268,21 @@ const TestPlanRunsDetail: React.FC = () => {
                   </div>
                 </dd>
 
-                <dt className="font-medium text-gray-500">Due date from:</dt>
+                <dt className="font-medium text-gray-500">
+                  {" "}
+                  <dt className="font-medium text-gray-500 inline-flex justify-between gap-2  ">
+                    <span>Due date from</span>
+                    <span>:</span>
+                  </dt>
+                </dt>
                 <dd className="text-gray-900">
                   {format(new Date(dueDateFrom), "MMMM dd, yyyy")}
                 </dd>
 
-                <dt className="font-medium text-gray-500">Due date to:</dt>
+                <dt className="font-medium text-gray-500 inline-flex justify-between gap-2  ">
+                  <span>Due date to</span>
+                  <span>:</span>
+                </dt>
                 <dd className="text-gray-900">
                   {" "}
                   {format(new Date(dueDateTo), "MMMM dd, yyyy")}

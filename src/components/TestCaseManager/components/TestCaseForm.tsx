@@ -69,7 +69,7 @@ const validationSchema = Yup.object({
 });
 
 export default function TestCaseForm({ selected }: TestCaseFormProps) {
-  const { fetchTestCases, state, fetchTestRuns } = useGlobalContext();
+  const { fetchTestCases, state, fetchTestRuns, dispatch } = useGlobalContext();
   const { projects } = state;
   const [initialValues, setInitialValues] = useState<TestCase>(initialState);
   const userId: string =
@@ -79,6 +79,7 @@ export default function TestCaseForm({ selected }: TestCaseFormProps) {
   const [userToken, setUserToken] = useState("");
 
   useEffect(() => {
+    dispatch({ type: "SET_SEARCH", isSearch: false });
     const token = sessionStorage.getItem("token") || "";
     setUserToken(token);
   });
@@ -187,7 +188,7 @@ export default function TestCaseForm({ selected }: TestCaseFormProps) {
             <Form className="space-y-4 sm:space-y-5">
               {[
                 { label: "Test Id", name: "testCaseId", length: 50 },
-                { label: "Test Case", name: "title", length: 50 },
+                { label: "Test Case", name: "title", length: 100 },
                 { label: "Module", name: "module", length: 30 },
                 {
                   label: "Pre-Conditions",

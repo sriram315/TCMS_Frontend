@@ -70,7 +70,7 @@ const validationSchema = Yup.object({
 });
 
 export default function TestRunForm({ selected }: TestRunFormProps) {
-  const { state, fetchTestRuns } = useGlobalContext();
+  const { state, fetchTestRuns, dispatch } = useGlobalContext();
   const { testCases: globalTestCases, projects: globalProjects } = state;
   const [initialValues, setInitialValues] = useState<TestCase>(initialState);
   const [filteredModules, setFilteredModules] = useState([]);
@@ -109,6 +109,7 @@ export default function TestRunForm({ selected }: TestRunFormProps) {
   };
 
   useEffect(() => {
+    dispatch({ type: "SET_SEARCH", isSearch: false });
     if (selected) {
       setInitialValues({
         ...selected,

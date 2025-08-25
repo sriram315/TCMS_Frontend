@@ -35,10 +35,11 @@ import {
 import Dropdown from "../components/common/Dropdown";
 import downloadExcel from "../utils/downloadExcel";
 import downloadExcelByWeeks from "../utils/downloadExcelPeriod";
+import { ToastContainer } from "react-toastify";
 
 const Dashboard: React.FC = () => {
   const { state, refetchDashboardData, dispatch } = useGlobalContext();
-  const [chartType, setChartType] = useState("Weekly");
+  const [chartType, setChartType] = useState("Daily");
   const {
     testStatus,
     testProgressData,
@@ -46,6 +47,10 @@ const Dashboard: React.FC = () => {
     testRuns,
     activities,
     testCases,
+    isProjectsLoading,
+    isActivitiesLoading,
+    isTestCaseLoading,
+    isTestRunsLoading,
   } = state;
 
   useEffect(() => {
@@ -150,253 +155,294 @@ const Dashboard: React.FC = () => {
   );
 
   return (
-    <div>
-      <PageHeader title="Dashboard" description="Test overview" />
-
-      <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3 mb-6">
-        <StatCard
-          title="Active Test Runs"
-          value={testRunProgressStatus.length}
-          icon={<PlayCircle className="h-6 w-6" />}
-          color="primary"
-        />
-        <StatCard
-          title="Total Test Cases"
-          value={testStatus.Total}
-          icon={<ClipboardList className="h-6 w-6" />}
-          color="secondary"
-        />
-        <StatCard
-          title="Untested Test Cases"
-          value={testStatus.Untested}
-          icon={<HelpCircle className="h-6 w-6" />}
-          color="secondary"
-        />
-
-        <StatCard
-          title="Passed Test Cases "
-          value={testStatus.Passed}
-          icon={<CheckCircle className="h-6 w-6" />}
-          trend={{
-            value: calculatePercentage(testStatus.Passed, testStatus.Total),
-            positive: true,
-          }}
-          color="success"
-        />
-        <StatCard
-          title="Failed Test Cases "
-          value={testStatus.Failed}
-          icon={<XCircle className="h-6 w-6" />}
-          trend={{
-            value: calculatePercentage(testStatus.Failed, testStatus.Total),
-            positive: false,
-          }}
-          color="danger"
-        />
-        <StatCard
-          title="Blocked Test Cases "
-          value={testStatus.Blocked}
-          icon={<MinusCircle className="h-6 w-6" />}
-          trend={{
-            value: calculatePercentage(testStatus.Blocked, testStatus.Total),
-            positive: false,
-          }}
-          color="danger"
-        />
-      </div>
-
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
-        <div className="lg:col-span-2">
-          <div className="card h-full">
-            <div className="card-header">
-              <h3 className="text-lg font-medium text-gray-900 flex items-center">
-                <BarChart className="h-5 w-5 text-gray-500 mr-2" />
-                <span className="font-semibold">Test progress {chartType}</span>
-                <button
-                  type="button"
-                  className="btn btn-outline mx-3  "
-                  onClick={() => downloadExcelByWeeks(testProgressData)}
-                >
-                  <DownloadIcon className="h-3 w-3 " />
-                </button>
-              </h3>
-              <Dropdown
-                dataList={chartData}
-                data={chartType}
-                handleUpdate={handleChartType}
-              />
-            </div>
-            <div className="card-body">
-              {testProgressData.length === 0 ? (
-                <span className=" text-gray-500">No data available</span>
-              ) : (
-                <ResponsiveContainer width="100%" height={300}>
-                  <LineChart
-                    data={testProgressData}
-                    margin={{ top: 5, right: 30, left: 20, bottom: 5 }}
-                  >
-                    <CartesianGrid strokeDasharray="3 3" />
-                    <XAxis dataKey="name" />
-                    <YAxis />
-                    <Tooltip />
-                    <Line
-                      type="monotone"
-                      dataKey="passed"
-                      stroke="#22C55E"
-                      strokeWidth={2}
-                      activeDot={{ r: 8 }}
-                    />
-                    <Line
-                      type="monotone"
-                      dataKey="failed"
-                      stroke="#EF4444"
-                      strokeWidth={2}
-                    />
-                    <Line
-                      type="monotone"
-                      dataKey="total"
-                      stroke="#3B82F6"
-                      strokeWidth={2}
-                      strokeDasharray="5 5"
-                    />
-                  </LineChart>
-                </ResponsiveContainer>
-              )}
-            </div>
-          </div>
-        </div>
-
+    <>
+      {isProjectsLoading &&
+      isActivitiesLoading &&
+      isTestCaseLoading &&
+      isTestRunsLoading ? (
         <div>
-          <div className="card h-full">
-            <div className="card-header">
-              <h3 className="text-lg font-semibold text-gray-900">
-                Test status
-              </h3>
-            </div>
-            <div className="card-body flex flex-col items-center justify-center">
-              {testStatusData.every((item) => item.value === 0) ? (
-                <div className="h-[200px]">
-                  <span className=" text-gray-500">No data available</span>
-                </div>
-              ) : (
-                <ResponsiveContainer width="100%" height={200}>
-                  <PieChart>
-                    <Pie
-                      data={testStatusData}
-                      cx="50%"
-                      cy="50%"
-                      innerRadius={60}
-                      outerRadius={80}
-                      paddingAngle={2}
-                      dataKey="value"
-                    >
-                      {testStatusData.map((entry, index) => (
-                        <Cell key={`cell-${index}`} fill={entry.color} />
-                      ))}
-                    </Pie>
-                    <Tooltip
-                      formatter={(value: number) =>
-                        `${Math.trunc(
-                          (value / (testStatus.Total || 1)) * 100
-                        )}%`
-                      }
-                    />
-                  </PieChart>
-                </ResponsiveContainer>
-              )}
+          <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3 mb-6">
+            <div className="h-24 bg-gray-300 rounded-lg animate-pulse"></div>
+            <div className=" h-24 bg-gray-300 rounded-lg animate-pulse"></div>
+            <div className="h-24 bg-gray-300 rounded-lg animate-pulse"></div>
+            <div className="h-24 bg-gray-300 rounded-lg animate-pulse"></div>
+            <div className=" h-24 bg-gray-300 rounded-lg animate-pulse"></div>
+            <div className="h-24 bg-gray-300 rounded-lg animate-pulse"></div>
+          </div>
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
+            {" "}
+            <div className="h-96 bg-gray-300 rounded-lg animate-pulse col-span-2"></div>
+            <div className=" h-96 bg-gray-300 rounded-lg animate-pulse"></div>
+          </div>
+        </div>
+      ) : (
+        <div>
+          <ToastContainer
+            position="top-right"
+            autoClose={3000}
+            hideProgressBar={false}
+            newestOnTop
+            closeOnClick
+            rtl={false}
+            pauseOnFocusLoss
+            draggable
+            pauseOnHover
+            theme="light"
+          />
+          <PageHeader title="Dashboard" description="Test overview" />
 
-              <div className="grid grid-cols-2 gap-x-6 gap-y-2 mt-4">
-                {Object.entries(testStatus).map(([title, count], index) => (
-                  <div key={index} className="flex items-center">
-                    <span
-                      className="w-3 h-3 rounded-full mr-2"
-                      style={{
-                        backgroundColor:
-                          title === "Total"
-                            ? "#6B7280"
-                            : testStatusData.find((data) => data.name === title)
-                                ?.color || "#6B7280",
-                      }}
-                    ></span>
-                    <span className="text-sm text-gray-700">
-                      {title}: {count}
+          <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3 mb-6">
+            <StatCard
+              title="Active Test Runs"
+              value={testRunProgressStatus.length}
+              icon={<PlayCircle className="h-6 w-6" />}
+              color="primary"
+            />
+            <StatCard
+              title="Total Test Cases"
+              value={testStatus.Total}
+              icon={<ClipboardList className="h-6 w-6" />}
+              color="secondary"
+            />
+            <StatCard
+              title="Untested Test Cases"
+              value={testStatus.Untested}
+              icon={<HelpCircle className="h-6 w-6" />}
+              color="secondary"
+            />
+
+            <StatCard
+              title="Passed Test Cases "
+              value={testStatus.Passed}
+              icon={<CheckCircle className="h-6 w-6" />}
+              trend={{
+                value: calculatePercentage(testStatus.Passed, testStatus.Total),
+                positive: true,
+              }}
+              color="success"
+            />
+            <StatCard
+              title="Failed Test Cases "
+              value={testStatus.Failed}
+              icon={<XCircle className="h-6 w-6" />}
+              trend={{
+                value: calculatePercentage(testStatus.Failed, testStatus.Total),
+                positive: false,
+              }}
+              color="danger"
+            />
+            <StatCard
+              title="Blocked Test Cases "
+              value={testStatus.Blocked}
+              icon={<MinusCircle className="h-6 w-6" />}
+              trend={{
+                value: calculatePercentage(
+                  testStatus.Blocked,
+                  testStatus.Total
+                ),
+                positive: false,
+              }}
+              color="danger"
+            />
+          </div>
+
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
+            <div className="lg:col-span-2">
+              <div className="card h-full">
+                <div className="card-header">
+                  <h3 className="text-lg font-medium text-gray-900 flex items-center">
+                    <BarChart className="h-5 w-5 text-gray-500 mr-2" />
+                    <span className="font-semibold">
+                      Test progress {chartType}
                     </span>
+                    <button
+                      type="button"
+                      className="btn btn-outline mx-3  "
+                      onClick={() => downloadExcelByWeeks(testProgressData)}
+                    >
+                      <DownloadIcon className="h-3 w-3 " />
+                    </button>
+                  </h3>
+                  <Dropdown
+                    dataList={chartData}
+                    data={chartType}
+                    handleUpdate={handleChartType}
+                  />
+                </div>
+                <div className="card-body">
+                  {testProgressData.length === 0 ? (
+                    <span className=" text-gray-500">No data available</span>
+                  ) : (
+                    <ResponsiveContainer width="100%" height={300}>
+                      <LineChart
+                        data={testProgressData}
+                        margin={{ top: 5, right: 30, left: 20, bottom: 5 }}
+                      >
+                        <CartesianGrid strokeDasharray="3 3" />
+                        <XAxis dataKey="name" />
+                        <YAxis />
+                        <Tooltip />
+                        <Line
+                          type="monotone"
+                          dataKey="passed"
+                          stroke="#22C55E"
+                          strokeWidth={2}
+                          activeDot={{ r: 8 }}
+                        />
+                        <Line
+                          type="monotone"
+                          dataKey="failed"
+                          stroke="#EF4444"
+                          strokeWidth={2}
+                        />
+                        <Line
+                          type="monotone"
+                          dataKey="total"
+                          stroke="#3B82F6"
+                          strokeWidth={2}
+                          strokeDasharray="5 5"
+                        />
+                      </LineChart>
+                    </ResponsiveContainer>
+                  )}
+                </div>
+              </div>
+            </div>
+
+            <div>
+              <div className="card h-full">
+                <div className="card-header">
+                  <h3 className="text-lg font-semibold text-gray-900">
+                    Test status
+                  </h3>
+                </div>
+                <div className="card-body flex flex-col items-center justify-center">
+                  {testStatusData.every((item) => item.value === 0) ? (
+                    <div className="h-[200px]">
+                      <span className=" text-gray-500">No data available</span>
+                    </div>
+                  ) : (
+                    <ResponsiveContainer width="100%" height={200}>
+                      <PieChart>
+                        <Pie
+                          data={testStatusData}
+                          cx="50%"
+                          cy="50%"
+                          innerRadius={60}
+                          outerRadius={80}
+                          paddingAngle={2}
+                          dataKey="value"
+                        >
+                          {testStatusData.map((entry, index) => (
+                            <Cell key={`cell-${index}`} fill={entry.color} />
+                          ))}
+                        </Pie>
+                        <Tooltip
+                          formatter={(value: number) =>
+                            `${Math.trunc(
+                              (value / (testStatus.Total || 1)) * 100
+                            )}%`
+                          }
+                        />
+                      </PieChart>
+                    </ResponsiveContainer>
+                  )}
+
+                  <div className="grid grid-cols-2 gap-x-6 gap-y-2 mt-4">
+                    {Object.entries(testStatus).map(([title, count], index) => (
+                      <div key={index} className="flex items-center">
+                        <span
+                          className="w-3 h-3 rounded-full mr-2"
+                          style={{
+                            backgroundColor:
+                              title === "Total"
+                                ? "#6B7280"
+                                : testStatusData.find(
+                                    (data) => data.name === title
+                                  )?.color || "#6B7280",
+                          }}
+                        ></span>
+                        <span className="text-sm text-gray-700">
+                          {title}: {count}
+                        </span>
+                      </div>
+                    ))}
                   </div>
-                ))}
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            {/* Recent Activity */}
+            <div className="card h-96 flex flex-col">
+              <div className="card-header px-6 py-4 flex-shrink-0">
+                <h3 className="text-lg font-semibold text-gray-900">
+                  Recent activity
+                </h3>
+              </div>
+              <div className="divide-y divide-gray-200 overflow-y-auto flex-1">
+                {activities.length > 0 ? (
+                  activities.map((activity) => (
+                    <div key={activity._id} className="px-6 py-3">
+                      <ActivityItem activity={activity} />
+                    </div>
+                  ))
+                ) : (
+                  <div className="flex items-center justify-center h-full text-sm text-gray-500">
+                    No Activities.
+                  </div>
+                )}
+              </div>
+            </div>
+
+            {/* Upcoming Test Runs */}
+            <div className="card h-96 flex flex-col">
+              <div className="card-header px-6 py-4 flex-shrink-0">
+                <h3 className="text-lg font-semibold text-gray-900">
+                  Upcoming Test Runs
+                </h3>
+              </div>
+              <div className="card-body overflow-y-auto flex-1 divide-y divide-gray-200 px-6">
+                <ul>
+                  {upcomingTestRuns.length > 0 ? (
+                    upcomingTestRuns.map((testRun) => (
+                      <li key={testRun._id} className="py-3">
+                        <div className="flex justify-between">
+                          <div>
+                            <p className="text-sm font-medium text-gray-900">
+                              {testRun.name}
+                            </p>
+                            <p className="text-sm text-gray-500">
+                              Assigned to: {testRun?.assignedTo?.name}
+                            </p>
+                          </div>
+                          <div className="text-sm text-gray-500">
+                            {formatDate(testRun?.dueDateFrom || "")}
+                          </div>
+                        </div>
+                      </li>
+                    ))
+                  ) : (
+                    <li className="py-3 text-sm text-gray-500">
+                      No upcoming test runs.
+                    </li>
+                  )}
+                </ul>
+              </div>
+              <div className="card-footer px-6 py-2 flex-shrink-0">
+                <Link
+                  to="/test-runs"
+                  className="text-sm font-medium text-primary-600 hover:text-primary-500"
+                >
+                  View all test runs →
+                </Link>
               </div>
             </div>
           </div>
         </div>
-      </div>
-
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        {/* Recent Activity */}
-        <div className="card h-96 flex flex-col">
-          <div className="card-header px-6 py-4 flex-shrink-0">
-            <h3 className="text-lg font-semibold text-gray-900">
-              Recent activity
-            </h3>
-          </div>
-          <div className="divide-y divide-gray-200 overflow-y-auto flex-1">
-            {activities.length > 0 ? (
-              activities.map((activity) => (
-                <div key={activity._id} className="px-6 py-3">
-                  <ActivityItem activity={activity} />
-                </div>
-              ))
-            ) : (
-              <div className="flex items-center justify-center h-full text-sm text-gray-500">
-                No Activities.
-              </div>
-            )}
-          </div>
-        </div>
-
-        {/* Upcoming Test Runs */}
-        <div className="card h-96 flex flex-col">
-          <div className="card-header px-6 py-4 flex-shrink-0">
-            <h3 className="text-lg font-semibold text-gray-900">
-              Upcoming Test Runs
-            </h3>
-          </div>
-          <div className="card-body overflow-y-auto flex-1 divide-y divide-gray-200 px-6">
-            <ul>
-              {upcomingTestRuns.length > 0 ? (
-                upcomingTestRuns.map((testRun) => (
-                  <li key={testRun._id} className="py-3">
-                    <div className="flex justify-between">
-                      <div>
-                        <p className="text-sm font-medium text-gray-900">
-                          {testRun.name}
-                        </p>
-                        <p className="text-sm text-gray-500">
-                          Assigned to: {testRun?.assignedTo?.name}
-                        </p>
-                      </div>
-                      <div className="text-sm text-gray-500">
-                        {formatDate(testRun?.dueDateFrom || "")}
-                      </div>
-                    </div>
-                  </li>
-                ))
-              ) : (
-                <li className="py-3 text-sm text-gray-500">
-                  No upcoming test runs.
-                </li>
-              )}
-            </ul>
-          </div>
-          <div className="card-footer px-6 py-2 flex-shrink-0">
-            <Link
-              to="/test-runs"
-              className="text-sm font-medium text-primary-600 hover:text-primary-500"
-            >
-              View all test runs →
-            </Link>
-          </div>
-        </div>
-      </div>
-    </div>
+      )}
+    </>
   );
 };
 

@@ -17,6 +17,7 @@ import { format } from "date-fns";
 import { toast, ToastContainer } from "react-toastify";
 import { API_URL } from "../config";
 import downloadExcel from "../utils/downloadExcel";
+import { useGlobalContext } from "../context/GlobalContext";
 
 export type TestStatus = "passed" | "failed" | "blocked" | "untested";
 
@@ -61,7 +62,7 @@ type TestRun = {
 
 const TestRunDetail: React.FC = () => {
   const { user } = useAuth();
-
+  const { fetchTestRuns, dispatch } = useGlobalContext();
   const [testRun, setTestRun] = useState<TestRun | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [testcaseJiraStatus, setTestcaseJiraStatus] = useState([]);
@@ -79,6 +80,7 @@ const TestRunDetail: React.FC = () => {
     JSON.parse(sessionStorage.getItem("user") || "{}")?.role || "";
 
   useEffect(() => {
+    dispatch({ type: "SET_SEARCH", payload: { text: "", isSearch: false } });
     const fetchTestRun = async () => {
       try {
         const { data } = await axios.get(`${API_URL}/test-runs/${id}`);
@@ -174,6 +176,7 @@ const TestRunDetail: React.FC = () => {
           tc._id === testCaseId ? { ...tc, status: newStatus } : tc
         ),
       });
+      fetchTestRuns();
     } catch (error) {
       console.error("Failed to update status:", error);
     }
