@@ -62,7 +62,7 @@ type TestRun = {
 
 const TestRunDetail: React.FC = () => {
   const { user } = useAuth();
-  const { fetchTestRuns, dispatch } = useGlobalContext();
+  const { fetchTestRuns, dispatch, fetchTestCases } = useGlobalContext();
   const [testRun, setTestRun] = useState<TestRun | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [testcaseJiraStatus, setTestcaseJiraStatus] = useState([]);
@@ -163,12 +163,17 @@ const TestRunDetail: React.FC = () => {
     newStatus: TestStatus
   ) => {
     try {
-      await axios.put(
+      const res = await axios.put(
         `${API_URL}/testcases/${testCaseId}`,
 
-        { status: newStatus, updatedBy: user?.name ?? "Unknown" },
+        {
+          status: newStatus,
+          updatedBy: user?.name ?? "Unknown",
+          executedBy: user?.name ?? "Unknown",
+        },
         { headers: { Authorization: `Bearer ${token}` } }
       );
+
       sessionStorage.removeItem("testCasesData");
       setTestRun({
         ...testRun,
@@ -177,6 +182,7 @@ const TestRunDetail: React.FC = () => {
         ),
       });
       fetchTestRuns();
+      fetchTestCases();
     } catch (error) {
       console.error("Failed to update status:", error);
     }

@@ -284,7 +284,10 @@ const ProjectDetail: React.FC = () => {
               <dd className="text-gray-900 flex flex-wrap gap-1 ">
                 {project &&
                   project.assignedTo?.map((assinedMember) => (
-                    <span className="px-2 py-1 border rounded-lg ">
+                    <span
+                      key={assinedMember._id}
+                      className="px-2 py-1 border rounded-lg "
+                    >
                       {assinedMember.name}
                     </span>
                   ))}

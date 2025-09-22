@@ -413,7 +413,7 @@ const TestCases: React.FC = () => {
                 <div className="bg-white rounded-lg shadow-sm border border-gray-200">
                   <div className="overflow-x-auto">
                     <table className="table">
-                      <thead>
+                      <thead className="whitespace-nowrap">
                         <tr ref={containerRef}>
                           <th scope="col">Test Id</th>
                           <th scope="col">Test Cases</th>
@@ -509,7 +509,7 @@ const TestCases: React.FC = () => {
                                   key={testCase._id}
                                   className="hover:bg-gray-50"
                                 >
-                                  <td className="font-medium">
+                                  <td className="font-medium whitespace-nowrap">
                                     {testCase.testCaseId}
                                   </td>
                                   <td

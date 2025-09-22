@@ -257,7 +257,7 @@ const Dashboard: React.FC = () => {
                     </span>
                     <button
                       type="button"
-                      className="btn btn-outline mx-3  "
+                      className="p-2 rounded-md btn-outline mx-3  "
                       onClick={() => downloadExcelByWeeks(testProgressData)}
                     >
                       <DownloadIcon className="h-3 w-3 " />

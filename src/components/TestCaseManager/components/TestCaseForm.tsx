@@ -82,7 +82,7 @@ export default function TestCaseForm({ selected }: TestCaseFormProps) {
     dispatch({ type: "SET_SEARCH", isSearch: false });
     const token = sessionStorage.getItem("token") || "";
     setUserToken(token);
-  });
+  }, []);
 
   // Function to create a test case
   const createTestCase = async (data: any) => {
@@ -216,8 +216,8 @@ export default function TestCaseForm({ selected }: TestCaseFormProps) {
                 //   name: "userStory",
                 //   length: 20,
                 // },
-              ].map((field) => (
-                <div key={field.name} className="flex flex-col">
+              ].map((field, index) => (
+                <div key={index} className="flex flex-col">
                   <label
                     htmlFor={field.name}
                     className="block text-sm font-medium text-gray-700 mb-1"
@@ -365,8 +365,10 @@ export default function TestCaseForm({ selected }: TestCaseFormProps) {
                             (assignee) => assignee._id === userId
                           )
                       )
-                      .map((project) => (
-                        <option value={project._id}>{project.name}</option>
+                      .map((project, index) => (
+                        <option key={index} value={project._id}>
+                          {project.name}
+                        </option>
                       ))}
                   </Field>
                   <ErrorMessage
